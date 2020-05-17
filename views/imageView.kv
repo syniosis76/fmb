@@ -1,0 +1,19 @@
+#:kivy 1.0
+
+<ImageView>:
+	GridLayout:
+		cols: 1		
+		GridLayout:
+			cols: 1
+			size_hint_y: 0.93
+			Button:
+				text: 'Image'				
+		GridLayout:
+			cols: 2
+			size_hint_y: 0.07
+			Button:
+				text: 'Back'
+				size_hint_x: 0.1			
+				on_press: root.backButtonClick(self)
+			BoxLayout:
+				#spacer

@@ -1,0 +1,3 @@
+title=booker
+author=verner software
+orientation=portrait
