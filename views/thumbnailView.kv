@@ -1,26 +1,29 @@
-#:kivy 1.0
+#:kivy 1.11.1
 
 <ThumbnailView>:
-	BoxLayout:
-		orientation: 'horizontal'
-		BoxLayout:
-			id: folderBox
-			size_hint_x: None
-			width: '200sp'
-		BoxLayout:
-			id: thumbnailBox
-			size_hint_x: 1
-			ScrollView:
-				id: thumbnailScrollView
-				size_hint_x: 1.0
-				size_hint_y: 1.0
-				do_scroll_x: False
-				GridLayout:
-					id: thumbnailGrid
-					cols: 1		
-					Button:
-						text: 'Thumbnails'
-						on_press: root.thumbnailClick(self)
-				
-				
-				
+  BoxLayout:
+    orientation: 'horizontal'
+    BoxLayout:
+      canvas:
+        Color:
+          rgba: 0.145, 0.145, 0.149, 1.0
+        Rectangle:
+          pos: self.pos
+          size: self.size      
+      id: folderBox
+      size_hint_x: None
+      width: '200sp'
+    BoxLayout:
+      id: thumbnailBox
+      size_hint_x: 1
+      ScrollView:
+        id: thumbnailScrollView
+        size_hint_x: 1.0
+        size_hint_y: 1.0
+        do_scroll_x: False
+        scroll_wheel_distance: '60sp'
+        GridLayout:
+          id: thumbnailGrid
+          cols: 1
+        
+        

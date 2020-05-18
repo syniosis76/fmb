@@ -3,6 +3,7 @@ kivy.require('1.0.7')
 
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager
+from kivy.core.window import Window
 
 from models.data import Data
 
@@ -11,6 +12,8 @@ from views.imageView import ImageView
 
 class BookerApp(App):    
     def build(self):
+        Window.clearcolor = (0.118, 0.118, 0.118, 1)
+
         self.data = Data()
         
         self.screenManager = ScreenManager()
