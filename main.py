@@ -4,13 +4,16 @@ kivy.require('1.0.7')
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager
 from kivy.core.window import Window
+from kivy.clock import mainthread
 
 from models.data import Data
 
 from views.thumbnailView import ThumbnailView
 from views.imageView import ImageView
 
-class BookerApp(App):    
+class FmbApp(App):
+    closing = False
+
     def build(self):
         Window.clearcolor = (0.118, 0.118, 0.118, 1)
 
@@ -23,5 +26,8 @@ class BookerApp(App):
 
         return self.screenManager
 
+    def on_stop(self):
+        self.closing = True
+
 if __name__ == '__main__':
-    BookerApp().run()
+    FmbApp().run()

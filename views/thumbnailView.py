@@ -5,13 +5,14 @@ from kivy.uix.button import Button
 from kivy.uix.image import Image
 from kivy.uix.floatlayout import FloatLayout
 from kivy.metrics import sp
-from kivy.clock import Clock
+from kivy.clock import Clock, mainthread
 from kivy.core.window import Window
 from kivy.core.image import Image as CoreImage
 from PIL import Image as PILImage
 from io import BytesIO
 
 import os
+import threading
 
 Builder.load_file('views/thumbnailView.kv')
 
@@ -37,15 +38,12 @@ class ThumbnailView(Screen):
             Clock.schedule_once(lambda x: self.buildUi(), 0.1)        
 
     def on_window_resize(self, window, width, height):
-        app = App.get_running_app()  
+        self.updateGridSize(width)
 
-        thumbnailGrid = self.ids.thumbnailGrid
-        thumbnailGridWidth = width - sp(app.data.foldersWidth)
-        columns = int(thumbnailGridWidth / self.cellWidth)
-        thumbnailGrid.cols = columns
-        thumbnailGrid.height = self.cellHeight * int(len(thumbnailGrid.children) / columns + 0.5)
+    def buildUi(self):
+        threading.Thread(target=self.buildUiThread).start()
 
-    def buildUi(self):        
+    def buildUiThread(self):        
         app = App.get_running_app()        
         
         folderBox = self.ids.folderBox
@@ -67,33 +65,52 @@ class ThumbnailView(Screen):
     
         with os.scandir(folder) as scandir:
             for entry in scandir:
+                if app.closing:
+                    break
                 if entry.is_file:
                     parts = os.path.splitext(entry.name)
                     if len(parts) == 2:
                         extension = parts[1].lower()
                         if extension == '.jpg':
-                            pilImage = PILImage.open(entry.path)
-                            pilImage.thumbnail((self.thumbnailWidth, self.thumbnailHeight))                            
-                            data = BytesIO()
-                            pilImage.save(data, format='png')
-                            data.seek(0)
-                            coreImage = CoreImage(BytesIO(data.read()), ext='png')
-
-                            thumbnailWidget = FloatLayout()
+                            coreImage = self.getThumbnailImage(entry.path)
+                            self.addThumbnail(app, thumbnailGrid, entry.path, coreImage)
                             
-                            thumbnailImage = Image()                            
-                            thumbnailImage.texture = coreImage.texture
-                            thumbnailImage.bind(on_press = self.thumbnailClick)
-                            thumbnailImage.pos_hint = {'x': self.marginSize, 'y': self.marginSize}
-                            thumbnailImage.size_hint = (self.thumbnailSize, self.thumbnailSize)
-
-                            thumbnailWidget.add_widget(thumbnailImage)
-                            thumbnailGrid.add_widget(thumbnailWidget)
-
-                            thumbnailGrid.height = self.cellHeight * int(len(thumbnailGrid.children) / columns + 0.5)
-
         self.version = app.data.version              
-                      
+
+    def getThumbnailImage(self, path):
+        pilImage = PILImage.open(path)
+        pilImage.thumbnail((self.thumbnailWidth, self.thumbnailHeight))                            
+        data = BytesIO()
+        pilImage.save(data, format='png')
+        data.seek(0)
+        return CoreImage(BytesIO(data.read()), ext='png')
+
+    @mainthread               
+    def addThumbnail(self, app, thumbnailGrid, path, coreImage):        
+        thumbnailWidget = FloatLayout()
+        
+        thumbnailImage = Image()                            
+        thumbnailImage.texture = coreImage.texture
+        thumbnailImage.bind(on_press = self.thumbnailClick)
+        thumbnailImage.pos_hint = {'x': self.marginSize, 'y': self.marginSize}
+        thumbnailImage.size_hint = (self.thumbnailSize, self.thumbnailSize)
+
+        thumbnailWidget.add_widget(thumbnailImage)
+        thumbnailGrid.add_widget(thumbnailWidget)
+
+        self.updateGridSize(Window.width)
+
+    def updateGridSize(self, width):
+        app = App.get_running_app()  
+
+        thumbnailGrid = self.ids.thumbnailGrid
+        thumbnailGridWidth = width - sp(app.data.foldersWidth)
+        columns = int(thumbnailGridWidth / self.cellWidth)
+        if columns < 1:
+            columns = 1
+        thumbnailGrid.cols = columns
+        thumbnailGrid.height = self.cellHeight * int(len(thumbnailGrid.children) / columns + 0.5)
+
     def thumbnailClick(self, instance):
         print('Image <%s> clicked.' % instance.text)
         #app = App.get_running_app()        
