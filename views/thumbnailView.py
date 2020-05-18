@@ -4,6 +4,7 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.button import Button
 from kivy.uix.image import Image
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.behaviors import ButtonBehavior
 from kivy.metrics import sp
 from kivy.clock import Clock, mainthread
 from kivy.core.window import Window
@@ -13,6 +14,9 @@ from io import BytesIO
 
 import os
 import threading
+
+class ImageButton(ButtonBehavior, Image):
+    pass
 
 Builder.load_file('views/thumbnailView.kv')
 
@@ -43,8 +47,9 @@ class ThumbnailView(Screen):
     def buildUi(self):
         threading.Thread(target=self.buildUiThread).start()
 
-    def buildUiThread(self):        
+    def buildUiThread(self):
         app = App.get_running_app()        
+        self.version = app.data.version
         
         folderBox = self.ids.folderBox
         folderBox.width = sp(app.data.foldersWidth)
@@ -74,8 +79,8 @@ class ThumbnailView(Screen):
                         if extension == '.jpg':
                             coreImage = self.getThumbnailImage(entry.path)
                             self.addThumbnail(app, thumbnailGrid, entry.path, coreImage)
-                            
-        self.version = app.data.version              
+
+        self.version = app.data.version                      
 
     def getThumbnailImage(self, path):
         pilImage = PILImage.open(path)
@@ -89,7 +94,7 @@ class ThumbnailView(Screen):
     def addThumbnail(self, app, thumbnailGrid, path, coreImage):        
         thumbnailWidget = FloatLayout()
         
-        thumbnailImage = Image()                            
+        thumbnailImage = ImageButton()                            
         thumbnailImage.texture = coreImage.texture
         thumbnailImage.bind(on_press = self.thumbnailClick)
         thumbnailImage.pos_hint = {'x': self.marginSize, 'y': self.marginSize}
@@ -111,8 +116,7 @@ class ThumbnailView(Screen):
         thumbnailGrid.cols = columns
         thumbnailGrid.height = self.cellHeight * int(len(thumbnailGrid.children) / columns + 0.5)
 
-    def thumbnailClick(self, instance):
-        print('Image <%s> clicked.' % instance.text)
+    def thumbnailClick(self, instance):        
         #app = App.get_running_app()        
 
         self.manager.transition.direction = 'left'
