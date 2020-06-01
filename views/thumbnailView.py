@@ -83,12 +83,30 @@ class ThumbnailView(Screen):
         self.version = app.data.version                      
 
     def getThumbnailImage(self, path):
-        pilImage = PILImage.open(path)
-        pilImage.thumbnail((self.thumbnailWidth, self.thumbnailHeight))                            
-        data = BytesIO()
-        pilImage.save(data, format='png')
-        data.seek(0)
-        return CoreImage(BytesIO(data.read()), ext='png')
+        app = App.get_running_app()        
+
+        fileName = os.path.basename(path)
+        thumbnailPath = os.path.join(app.data.currentWorkingFolder, fileName + '.tn')
+        
+        if os.path.exists(thumbnailPath):
+            return CoreImage(thumbnailPath)
+        else:
+            # Ensure Working folder exists:
+            os.makedirs(app.data.currentWorkingFolder, exist_ok=True)
+            # Load Image
+            pilImage = PILImage.open(path)
+            # Make Thumbnail
+            pilImage.thumbnail((self.thumbnailWidth, self.thumbnailHeight))
+            # Save to Stream
+            data = BytesIO()
+            pilImage.save(data, format='png')
+            # Save Stream to File
+            data.seek(0)
+            with open(thumbnailPath, "wb") as outfile:                
+                outfile.write(data.getbuffer())
+            # Return Image 
+            data.seek(0)          
+            return CoreImage(BytesIO(data.read()), ext='png')
 
     @mainthread               
     def addThumbnail(self, app, thumbnailGrid, path, coreImage):        
@@ -99,6 +117,7 @@ class ThumbnailView(Screen):
         thumbnailImage.bind(on_press = self.thumbnailClick)
         thumbnailImage.pos_hint = {'x': self.marginSize, 'y': self.marginSize}
         thumbnailImage.size_hint = (self.thumbnailSize, self.thumbnailSize)
+        thumbnailImage.filePath = path
 
         thumbnailWidget.add_widget(thumbnailImage)
         thumbnailGrid.add_widget(thumbnailWidget)
@@ -114,7 +133,7 @@ class ThumbnailView(Screen):
         if columns < 1:
             columns = 1
         thumbnailGrid.cols = columns
-        thumbnailGrid.height = self.cellHeight * int(len(thumbnailGrid.children) / columns + 0.5)
+        thumbnailGrid.height = self.cellHeight * int(len(thumbnailGrid.children) / columns + 0.5)    
 
     def thumbnailClick(self, instance):        
         #app = App.get_running_app()        

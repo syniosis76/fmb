@@ -7,7 +7,7 @@ class Data():
   folders = []
   foldersWidth = 200
   currentFolder = None
-  version = 0
+  version = 0  
 
   def __init__(self):
     self.loadData()     
@@ -33,6 +33,10 @@ class Data():
 
     with open(self.filename, 'wb') as filehandle:            
       pickle.dump(data, filehandle)
+
+  @property
+  def currentWorkingFolder(self):
+    return os.path.join(self.currentFolder, '.fmb')
 
   def updateVersion(self):
     self.version += 1
