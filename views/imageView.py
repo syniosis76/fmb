@@ -8,6 +8,7 @@ from kivy.metrics import sp
 from kivy.clock import Clock, mainthread
 from kivy.uix.image import Image
 from kivy.core.image import Image as CoreImage
+from kivy.core.window import Window, Keyboard
 from PIL import Image as PILImage
 from io import BytesIO
 
@@ -21,9 +22,13 @@ def sizeCallback(obj, value):
 
 class ImageView(Screen):
     def __init__(self, **kwargs):
-        super(ImageView, self).__init__(**kwargs)                   
+        super(ImageView, self).__init__(**kwargs) 
+        Window.bind(on_key_up=self.on_key_up)
+        Window.bind(on_key_down=self.on_key_down)                
 
     def on_pre_enter(self):
+        imageGrid = self.ids.imageGrid
+        imageGrid.clear_widgets()
         self.loadImage()
 
     def loadImage(self):
@@ -32,7 +37,7 @@ class ImageView(Screen):
     def buildLoadImage(self):
         app = App.get_running_app()                
         
-        coreImage = self.getImage(app.data.currentFile)
+        coreImage = self.getImage(app.thumbnailView.currentFile)
         self.showImage(app, coreImage)
 
     def getImage(self, path):
@@ -59,3 +64,18 @@ class ImageView(Screen):
 
         self.manager.transition.direction = 'right'
         self.manager.current = 'ThumbnailView'
+
+    def selectImage(self, offset):
+        app = App.get_running_app()                
+        app.thumbnailView.selectImage(offset)
+        self.loadImage()
+
+    def on_key_down(self, window, keycode, text, modifiers, x):
+        print('Key Down: ' + str(keycode))
+        if keycode == Keyboard.keycodes['right']:
+            self.selectImage(1)
+        elif keycode == Keyboard.keycodes['left']:
+            self.selectImage(-1)
+    
+    def on_key_up(self, window, keycode, text):
+        print('Key Up: ' + str(keycode))

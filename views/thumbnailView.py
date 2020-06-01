@@ -30,6 +30,8 @@ class ThumbnailView(Screen):
     thumbnailSize = 1 - marginSize
     thumbnailWidth = cellWidth * thumbnailSize
     thumbnailHeight = cellHeight * thumbnailSize
+    currentFile = None
+    currentIndex = None
 
     def __init__(self, **kwargs):        
         super(ThumbnailView, self).__init__(**kwargs)                   
@@ -67,6 +69,8 @@ class ThumbnailView(Screen):
         thumbnailGrid.size_hint_y = None 
 
         folder = app.data.currentFolder
+
+        fileIndex = 0
     
         with os.scandir(folder) as scandir:
             for entry in scandir:
@@ -77,8 +81,9 @@ class ThumbnailView(Screen):
                     if len(parts) == 2:
                         extension = parts[1].lower()
                         if extension == '.jpg':
-                            coreImage = self.getThumbnailImage(entry.path)
-                            self.addThumbnail(app, thumbnailGrid, entry.path, coreImage)
+                            coreImage = self.getThumbnailImage(entry.path)                            
+                            self.addThumbnail(app, thumbnailGrid, entry.path, fileIndex, coreImage)
+                            fileIndex = fileIndex + 1
 
         self.version = app.data.version                      
 
@@ -109,7 +114,7 @@ class ThumbnailView(Screen):
             return CoreImage(BytesIO(data.read()), ext='png')
 
     @mainthread               
-    def addThumbnail(self, app, thumbnailGrid, path, coreImage):        
+    def addThumbnail(self, app, thumbnailGrid, path, fileIndex, coreImage):        
         thumbnailWidget = FloatLayout()
         
         thumbnailImage = ImageButton()                            
@@ -118,6 +123,7 @@ class ThumbnailView(Screen):
         thumbnailImage.pos_hint = {'x': self.marginSize, 'y': self.marginSize}
         thumbnailImage.size_hint = (self.thumbnailSize, self.thumbnailSize)
         thumbnailImage.filePath = path
+        thumbnailImage.fileIndex = fileIndex
 
         thumbnailWidget.add_widget(thumbnailImage)
         thumbnailGrid.add_widget(thumbnailWidget)
@@ -135,9 +141,33 @@ class ThumbnailView(Screen):
         thumbnailGrid.cols = columns
         thumbnailGrid.height = self.cellHeight * int(len(thumbnailGrid.children) / columns + 0.5)    
 
-    def thumbnailClick(self, instance):        
-        app = App.get_running_app()        
-        app.data.currentFile = instance.filePath
+    def thumbnailClick(self, instance):                
+        self.currentFile = instance.filePath
+        self.currentIndex = instance.fileIndex
 
         self.manager.transition.direction = 'left'
-        self.manager.current = 'ImageView1'
+        self.manager.current = 'ImageView'
+
+    def selectImage(self, offset):
+        thumbnailGrid = self.ids.thumbnailGrid
+
+        if len(thumbnailGrid.children) == 0:
+            self.currentIndex = None
+        else:
+            if self.currentIndex == None:            
+                newIndex = 0
+            else:
+                newIndex = self.currentIndex + offset
+
+            if newIndex < 0:
+                newIndex = 0
+            elif newIndex > len(thumbnailGrid.children) - 1:
+                newIndex = len(thumbnailGrid.children) - 1
+
+            self.currentIndex = newIndex
+            thumbnailWidget = thumbnailGrid.children[len(thumbnailGrid.children) - 1 - newIndex]
+            image = thumbnailWidget.children[0]
+            self.currentFile = image.filePath
+
+    def selectPreviousImage(self):
+        pass

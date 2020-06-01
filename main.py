@@ -2,7 +2,7 @@ import kivy
 kivy.require('1.0.7')
 
 from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager
+from kivy.uix.screenmanager import ScreenManager, NoTransition
 from kivy.core.window import Window
 from kivy.clock import mainthread
 
@@ -13,6 +13,8 @@ from views.imageView import ImageView
 
 class FmbApp(App):
     closing = False
+    thumbnailView = None
+    imageView = None
 
     def build(self):
         Window.clearcolor = (0.118, 0.118, 0.118, 1)
@@ -20,9 +22,11 @@ class FmbApp(App):
         self.data = Data()
         
         self.screenManager = ScreenManager()
-        self.screenManager.add_widget(ThumbnailView(name='ThumbnailView'))
-        self.screenManager.add_widget(ImageView(name='ImageView1'))
-        self.screenManager.add_widget(ImageView(name='ImageView2'))
+        self.screenManager.transition = NoTransition()
+        self.thumbnailView = ThumbnailView(name='ThumbnailView')
+        self.imageView = ImageView(name='ImageView')
+        self.screenManager.add_widget(self.thumbnailView)
+        self.screenManager.add_widget(self.imageView)
 
         return self.screenManager
 
