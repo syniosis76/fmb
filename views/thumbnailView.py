@@ -136,7 +136,8 @@ class ThumbnailView(Screen):
         thumbnailGrid.height = self.cellHeight * int(len(thumbnailGrid.children) / columns + 0.5)    
 
     def thumbnailClick(self, instance):        
-        #app = App.get_running_app()        
+        app = App.get_running_app()        
+        app.data.currentFile = instance.filePath
 
         self.manager.transition.direction = 'left'
         self.manager.current = 'ImageView1'

@@ -7,6 +7,7 @@ class Data():
   folders = []
   foldersWidth = 200
   currentFolder = None
+  currentFile = None
   version = 0  
 
   def __init__(self):
