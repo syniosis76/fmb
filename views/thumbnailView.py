@@ -10,6 +10,8 @@ from kivy.clock import Clock, mainthread
 from kivy.core.window import Window
 from kivy.core.image import Image as CoreImage
 from PIL import Image as PILImage
+from ffpyplayer.player import MediaPlayer
+from ffpyplayer.pic import SWScale
 from io import BytesIO
 
 import os
@@ -80,14 +82,14 @@ class ThumbnailView(Screen):
                     parts = os.path.splitext(entry.name)
                     if len(parts) == 2:
                         extension = parts[1].lower()
-                        if extension == '.jpg':
-                            coreImage = self.getThumbnailImage(entry.path)                            
+                        if extension in app.data.allTypes:
+                            coreImage = self.getThumbnailImage(entry.path, extension)                            
                             self.addThumbnail(app, thumbnailGrid, entry.path, fileIndex, coreImage)
                             fileIndex = fileIndex + 1
 
         self.version = app.data.version                      
 
-    def getThumbnailImage(self, path):
+    def getThumbnailImage(self, path, extension):
         app = App.get_running_app()        
 
         fileName = os.path.basename(path)
@@ -97,11 +99,30 @@ class ThumbnailView(Screen):
             return CoreImage(thumbnailPath)
         else:
             # Ensure Working folder exists:
-            os.makedirs(app.data.currentWorkingFolder, exist_ok=True)
-            # Load Image
-            pilImage = PILImage.open(path)
+            os.makedirs(app.data.currentWorkingFolder, exist_ok=True)                        
+
+            if extension in app.data.imageTypes:
+                # Load Image
+                pilImage = PILImage.open(path)                
+            elif extension in app.data.videoTypes:
+                player = MediaPlayer(path, ff_opts={'paused': True, 'ss': 5.0, 'an': True})
+                frame = None
+                while not frame:
+                    frame, value = player.get_frame(force_refresh=True)
+                player.close_player()
+                player = None
+                frame = frame[0]
+                frame_size = frame.get_size()
+                frame_converter = SWScale(frame_size[0], frame_size[1], frame.get_pixel_format(), ofmt='rgb24')
+                new_frame = frame_converter.scale(frame)
+                image_data = bytes(new_frame.to_bytearray()[0])
+
+                pilImage = PILImage.frombuffer(mode='RGB', size=(frame_size[0], frame_size[1]), data=image_data, decoder_name='raw')
+                #pilImage = pilImage.transpose(1)                
+            
             # Make Thumbnail
             pilImage.thumbnail((self.thumbnailWidth, self.thumbnailHeight))
+
             # Save to Stream
             data = BytesIO()
             pilImage.save(data, format='png')

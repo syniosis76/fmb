@@ -8,13 +8,16 @@ class Data():
   foldersWidth = 200
   currentFolder = None
   currentFile = None
-  version = 0  
+  version = 0
+  imageTypes = ['.jpg', '.png', '.jpeg', '.bmp', '.gif', '.pcx']
+  videoTypes = ['.avi', '.mov', '.mp4', '.mpeg4', '.mts', '.mpg', '.mpeg', '.vob', '.mkv']
+  allTypes = imageTypes + videoTypes
 
   def __init__(self):
     self.loadData()     
 
   def loadData(self):    
-    self.currentFolder = 'C:\\tmp\\fmvpics' # Todo Remove.
+    self.currentFolder = 'C:\\tmp\\fmbpics' # Todo Remove.
     self.load()    
     self.updateVersion()
 
