@@ -7,8 +7,8 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.metrics import sp
 from kivy.clock import Clock, mainthread
 from kivy.uix.image import Image
-#from kivy.uix.videoplayer import VideoPlayer
-from kivy.uix.video import Video
+from kivy.uix.videoplayer import VideoPlayer
+#from kivy.uix.video import Video
 from kivy.core.image import Image as CoreImage
 from kivy.core.window import Window, Keyboard
 from PIL import Image as PILImage
@@ -70,17 +70,18 @@ class ImageView(Screen):
             imageGrid = self.ids.imageGrid
             imageGrid.clear_widgets()        
         
-            video = Video()                            
+            video = VideoPlayer()                            
             imageGrid.add_widget(video)       
             video.options['allow_stretch'] = True
-        
+            
         video.source = path
         video.state = 'play'
 
     @mainthread
     def stopCurrentVideo(self):
         if self.currentVideo != None:
-            self.currentVideo.state = 'stop'
+            #self.currentVideo.state = 'stop'
+            self.currentVideo.unload()
 
     def goToThumbnailView(self):
         self.stopCurrentVideo()

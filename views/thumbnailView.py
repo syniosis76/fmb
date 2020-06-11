@@ -10,8 +10,7 @@ from kivy.clock import Clock, mainthread
 from kivy.core.window import Window
 from kivy.core.image import Image as CoreImage
 from PIL import Image as PILImage
-from ffpyplayer.player import MediaPlayer
-from ffpyplayer.pic import SWScale
+import ffmpeg
 from io import BytesIO
 
 import os
@@ -82,7 +81,7 @@ class ThumbnailView(Screen):
                     parts = os.path.splitext(entry.name)
                     if len(parts) == 2:
                         extension = parts[1].lower()
-                        if extension in app.data.allTypes:
+                        if extension in app.data.allTypes:                            
                             coreImage = self.getThumbnailImage(entry.path, extension)                            
                             self.addThumbnail(app, thumbnailGrid, entry.path, fileIndex, coreImage)
                             fileIndex = fileIndex + 1
@@ -105,20 +104,15 @@ class ThumbnailView(Screen):
                 # Load Image
                 pilImage = PILImage.open(path)                
             elif extension in app.data.videoTypes:
-                player = MediaPlayer(path, ff_opts={'paused': True, 'ss': 5.0, 'an': True})
-                frame = None
-                while not frame:
-                    frame, value = player.get_frame(force_refresh=True)
-                player.close_player()
-                player = None
-                frame = frame[0]
-                frame_size = frame.get_size()
-                frame_converter = SWScale(frame_size[0], frame_size[1], frame.get_pixel_format(), ofmt='rgb24')
-                new_frame = frame_converter.scale(frame)
-                image_data = bytes(new_frame.to_bytearray()[0])
+                buffer, error = (
+                    ffmpeg
+                    .input(path)
+                    .filter('select', 'gte(n,{})'.format(60))
+                    .output('pipe:', vframes=1, format='image2', vcodec='mjpeg')
+                    .run(capture_stdout=True)
+                )
 
-                pilImage = PILImage.frombuffer(mode='RGB', size=(frame_size[0], frame_size[1]), data=image_data, decoder_name='raw')
-                #pilImage = pilImage.transpose(1)                
+                pilImage = PILImage.open(BytesIO(buffer))
             
             # Make Thumbnail
             pilImage.thumbnail((self.thumbnailWidth, self.thumbnailHeight))

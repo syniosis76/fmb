@@ -1,5 +1,12 @@
+import os
+os.environ['KIVY_WINDOW'] = 'sdl2'
+os.environ['KIVY_VIDEO'] = 'gstplayer'
+
 import kivy
-kivy.require('1.0.7')
+kivy.require('1.11.1')
+
+from kivy.config import Config
+Config.set('kivy', 'exit_on_escape', 0)
 
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, NoTransition
