@@ -5,11 +5,13 @@ from kivy.uix.button import Button
 from kivy.uix.image import Image
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.behaviors import ButtonBehavior
+from kivy.graphics import *
 from kivy.metrics import sp
 from kivy.clock import Clock, mainthread
 from kivy.core.window import Window
 from kivy.core.image import Image as CoreImage
 from PIL import Image as PILImage
+from kivy.core.window import Window, Keyboard
 import ffmpeg
 from io import BytesIO
 
@@ -31,13 +33,17 @@ class ThumbnailView(Screen):
     thumbnailSize = 1 - marginSize
     thumbnailWidth = cellWidth * thumbnailSize
     thumbnailHeight = cellHeight * thumbnailSize
-    currentFile = None
+    columns = 1
     currentIndex = None
+    currentImage = None
+    currentFile = None    
 
     def __init__(self, **kwargs):        
         super(ThumbnailView, self).__init__(**kwargs)                   
         self.version = 0
         Window.bind(on_resize=self.on_window_resize)
+        Window.bind(on_key_up=self.on_key_up)
+        Window.bind(on_key_down=self.on_key_down)
 
     def on_enter(self):
         app = App.get_running_app()
@@ -60,9 +66,11 @@ class ThumbnailView(Screen):
         thumbnailGrid = self.ids.thumbnailGrid
 
         thumbnailGridWidth = Window.width - sp(app.data.foldersWidth)
-        columns = int(thumbnailGridWidth / self.cellWidth)
+        self.columns = int(thumbnailGridWidth / self.cellWidth)
+        if self.columns < 1:
+            self.columns = 1
 
-        thumbnailGrid.cols = columns
+        thumbnailGrid.cols = self.columns
         thumbnailGrid.col_default_width = self.cellWidth
         thumbnailGrid.col_force_default = True
         thumbnailGrid.row_default_height = self.cellHeight
@@ -145,25 +153,57 @@ class ThumbnailView(Screen):
 
         self.updateGridSize(Window.width)
 
+    def showSelected(self, object):
+        if object:
+            object.canvas.after.clear()
+
+            width = object.size[0]
+            height = object.size[1]
+
+            imageWidth = object.texture_size[0]
+            imageHeight = object.texture_size[1]
+
+            x = object.pos[0] + ((width - imageWidth) / 2)
+            y = object.pos[1] + ((height - imageHeight) / 2)
+
+            with object.canvas.after:
+                Color(0.207, 0.463, 0.839, mode='rgb')
+                Line(width=2, rectangle=(x, y, imageWidth, imageHeight))
+
+    def hideSelected(self, object):
+        if object:
+            object.canvas.after.clear()
+
     def updateGridSize(self, width):
         app = App.get_running_app()  
 
         thumbnailGrid = self.ids.thumbnailGrid
         thumbnailGridWidth = width - sp(app.data.foldersWidth)
-        columns = int(thumbnailGridWidth / self.cellWidth)
-        if columns < 1:
-            columns = 1
-        thumbnailGrid.cols = columns
-        thumbnailGrid.height = self.cellHeight * int(len(thumbnailGrid.children) / columns + 0.5)    
+        self.columns = int(thumbnailGridWidth / self.cellWidth)
+        if self.columns < 1:
+            self.columns = 1
+        thumbnailGrid.cols = self.columns
+        thumbnailGrid.height = self.cellHeight * int(len(thumbnailGrid.children) / self.columns + 0.5)
 
-    def thumbnailClick(self, instance):                
-        self.currentFile = instance.filePath
+        # The selection dissappears on resize so show again.
+        Clock.schedule_once(lambda x: self.showSelected(self.currentImage), 0.1)         
+
+    def thumbnailClick(self, instance):               
+        self.hideSelected(self.currentImage)
+                
         self.currentIndex = instance.fileIndex
+        self.currentImage = instance
+        self.currentFile = instance.filePath
 
-        self.manager.transition.direction = 'left'
-        self.manager.current = 'ImageView'
+        self.showSelected(instance)
+
+        if instance.last_touch.is_double_tap:
+            self.manager.transition.direction = 'left'
+            self.manager.current = 'ImageView'
 
     def selectImage(self, offset):
+        self.hideSelected(self.currentImage)
+        
         thumbnailGrid = self.ids.thumbnailGrid
 
         if len(thumbnailGrid.children) == 0:
@@ -182,7 +222,26 @@ class ThumbnailView(Screen):
             self.currentIndex = newIndex
             thumbnailWidget = thumbnailGrid.children[len(thumbnailGrid.children) - 1 - newIndex]
             image = thumbnailWidget.children[0]
+            self.currentImage = image
             self.currentFile = image.filePath
 
-    def selectPreviousImage(self):
-        pass
+            self.showSelected(image)
+
+    def on_key_down(self, window, keycode, text, modifiers, x):
+        if self.manager.current == self.name:
+            print('ThumbnailView Key Down: ' + str(keycode))
+            if keycode == Keyboard.keycodes['right']:
+                self.selectImage(1)
+            elif keycode == Keyboard.keycodes['left']:
+                self.selectImage(-1)
+            elif keycode == Keyboard.keycodes['down']:
+                self.selectImage(self.columns)
+            elif keycode == Keyboard.keycodes['up']:
+                self.selectImage(-self.columns)
+            elif keycode == Keyboard.keycodes['enter']:
+                self.manager.transition.direction = 'left'
+                self.manager.current = 'ImageView'   
+    
+    def on_key_up(self, window, keycode, text):
+        if self.manager.current == self.name:
+            print('ThumbnailView Key Up: ' + str(keycode))

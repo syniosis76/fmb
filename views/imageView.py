@@ -30,9 +30,7 @@ class ImageView(Screen):
         Window.bind(on_key_up=self.on_key_up)
         Window.bind(on_key_down=self.on_key_down)                
 
-    def on_pre_enter(self):
-        imageGrid = self.ids.imageGrid
-        imageGrid.clear_widgets()
+    def on_pre_enter(self):        
         self.loadMedia()
 
     def loadMedia(self):
@@ -59,8 +57,8 @@ class ImageView(Screen):
         image = Image()                            
         image.source = path
         imageGrid.add_widget(image)   
-    
-    @mainthread               
+
+    @mainthread              
     def showVideo(self, path):
         self.stopCurrentVideo()
 
@@ -73,18 +71,24 @@ class ImageView(Screen):
             video = VideoPlayer()                            
             imageGrid.add_widget(video)       
             video.options['allow_stretch'] = True
+            self.currentVideo = video
             
         video.source = path
         video.state = 'play'
 
-    @mainthread
     def stopCurrentVideo(self):
         if self.currentVideo != None:
-            #self.currentVideo.state = 'stop'
-            self.currentVideo.unload()
+            self.currentVideo.state = 'stop'
+            #self.currentVideo.unload()
 
-    def goToThumbnailView(self):
+    def clearImage(self):
+        self.currentVideo = None
+        imageGrid = self.ids.imageGrid
+        imageGrid.clear_widgets()
+
+    def goToThumbnailView(self):        
         self.stopCurrentVideo()
+        self.clearImage()
 
         self.manager.transition.direction = 'right'
         self.manager.current = 'ThumbnailView'
@@ -95,18 +99,19 @@ class ImageView(Screen):
         self.loadMedia()
 
     def backButtonClick(self, instance):
-        print('Back button clicked.')
-
+        print('Back button clicked.')        
         self.goToThumbnailView()
 
-    def on_key_down(self, window, keycode, text, modifiers, x):
-        print('Key Down: ' + str(keycode))
-        if keycode == Keyboard.keycodes['escape']:
-            self.goToThumbnailView()
-        if keycode == Keyboard.keycodes['right']:
-            self.selectImage(1)
-        elif keycode == Keyboard.keycodes['left']:
-            self.selectImage(-1)
+    def on_key_down(self, window, keycode, text, modifiers, x):        
+        if self.manager.current == self.name:
+            print('ImageView Key Down: ' + str(keycode))
+            if keycode == Keyboard.keycodes['escape']:
+                self.goToThumbnailView()
+            if keycode == Keyboard.keycodes['right']:
+                self.selectImage(1)
+            elif keycode == Keyboard.keycodes['left']:
+                self.selectImage(-1)
     
     def on_key_up(self, window, keycode, text):
-        print('Key Up: ' + str(keycode))
+        if self.manager.current == self.name:
+            print('ImagveView Key Up: ' + str(keycode))
