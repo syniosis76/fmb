@@ -22,8 +22,10 @@
         size_hint_y: 1.0
         do_scroll_x: False
         scroll_wheel_distance: '60sp'
-        GridLayout:
+        scroll_type: ['bars']
+        DraggableGridLayout:
           id: thumbnailGrid
+          drag_classes: ['thumbnailLayout']
           cols: 1
         
         

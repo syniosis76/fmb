@@ -108,9 +108,9 @@ class ImageView(Screen):
             if keycode == Keyboard.keycodes['escape']:
                 self.goToThumbnailView()
             if keycode == Keyboard.keycodes['right']:
-                self.selectImage(1)
-            elif keycode == Keyboard.keycodes['left']:
                 self.selectImage(-1)
+            elif keycode == Keyboard.keycodes['left']:
+                self.selectImage(1)
     
     def on_key_up(self, window, keycode, text):
         if self.manager.current == self.name:
