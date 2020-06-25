@@ -41,10 +41,6 @@ class ThumbnailWidget(DraggableObjectBehavior, FloatLayout):
         super(ThumbnailWidget, self).__init__(
             **kwargs, drag_controller=drag_controller)
 
-    def complete_drag(self):
-        # during a drag, we remove the widget from the original location
-        self.thumbnailView.thumbnailCompleteDrag(self)
-
 Builder.load_file('views/thumbnailView.kv')
 
 def sizeCallback(obj, value):
@@ -170,6 +166,7 @@ class ThumbnailView(Screen):
         thumbnailImage.pos_hint = {'x': self.marginSize, 'y': self.marginSize}
         thumbnailImage.size_hint = (self.thumbnailSize, self.thumbnailSize)    
         thumbnailImage.filePath = path
+        thumbnailImage.bind(pos = self.thumbnailPosChanged)
 
         thumbnailWidget.add_widget(thumbnailImage)
         thumbnailGrid.add_widget(thumbnailWidget)
@@ -191,7 +188,11 @@ class ThumbnailView(Screen):
 
             with object.canvas.after:
                 Color(0.207, 0.463, 0.839, mode='rgb')
-                Line(width=sp(2), rectangle=(x, y, imageWidth, imageHeight))
+                Line(width=sp(2), rectangle=(x, y, imageWidth, imageHeight))                        
+
+    def thumbnailPosChanged(self, object, pos):
+        if object == self.currentImage:
+            self.showSelected(object)
 
     def hideSelected(self, object):
         if object:
@@ -241,11 +242,6 @@ class ThumbnailView(Screen):
                     super(ThumbnailWidget, widget).on_touch_down(touch)
 
                     return True
-   
-    def thumbnailCompleteDrag(self, instance):                               
-        if self.currentImage:
-            self.hideSelected(self.currentImage)
-            Clock.schedule_once(lambda x: self.showSelected(self.currentImage), 0.1)            
 
     def selectImage(self, offset):
         self.hideSelected(self.currentImage)
