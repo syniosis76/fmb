@@ -27,8 +27,12 @@ class DraggableGridLayout(DraggableLayoutBehavior, GridLayout):
         return 'before' if pos[0] < widget.center_x else 'after'
 
     def handle_drag_release(self, index, drag_widget):
-        self.add_widget(drag_widget, index)    
+        self.remove_widget(drag_widget)
+        self.add_widget(drag_widget, index)
 
+    def get_drop_insertion_index_move(self, x, y):
+        pass
+    
 class ThumbnailImage(Image):
     pass
 
@@ -36,10 +40,6 @@ class ThumbnailWidget(DraggableObjectBehavior, FloatLayout):
     def __init__(self, **kwargs):
         super(ThumbnailWidget, self).__init__(
             **kwargs, drag_controller=drag_controller)
-
-    def initiate_drag(self):
-        # during a drag, we remove the widget from the original location
-        self.parent.remove_widget(self)  
 
     def complete_drag(self):
         # during a drag, we remove the widget from the original location
@@ -53,8 +53,8 @@ def sizeCallback(obj, value):
 class ThumbnailView(Screen):
     cellWidth = sp(160)
     cellHeight = cellWidth * 4 / 5
-    marginSize = 0.06
-    thumbnailSize = 1 - marginSize
+    marginSize = 0.04
+    thumbnailSize = 1 - (marginSize * 2)
     thumbnailWidth = cellWidth * thumbnailSize
     thumbnailHeight = cellHeight * thumbnailSize
     columns = 1
@@ -191,7 +191,7 @@ class ThumbnailView(Screen):
 
             with object.canvas.after:
                 Color(0.207, 0.463, 0.839, mode='rgb')
-                Line(width=2, rectangle=(x, y, imageWidth, imageHeight))
+                Line(width=sp(2), rectangle=(x, y, imageWidth, imageHeight))
 
     def hideSelected(self, object):
         if object:
@@ -239,7 +239,7 @@ class ThumbnailView(Screen):
                         self.manager.current = 'ImageView'
                                         
                     super(ThumbnailWidget, widget).on_touch_down(touch)
-                    
+
                     return True
    
     def thumbnailCompleteDrag(self, instance):                               
