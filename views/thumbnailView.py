@@ -224,7 +224,7 @@ class ThumbnailView(Screen):
             if widget:
                 image = widget.children[0]
                 
-                if image != self.currentImage:
+                if touch.is_double_tap or image != self.currentImage:
                     self.hideSelected(self.currentImage)
                             
                     thumbnailGrid = self.ids.thumbnailGrid
@@ -237,6 +237,8 @@ class ThumbnailView(Screen):
                     if touch.is_double_tap:
                         self.manager.transition.direction = 'left'
                         self.manager.current = 'ImageView'
+                                        
+                    super(ThumbnailWidget, widget).on_touch_down(touch)
                     
                     return True
    

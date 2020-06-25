@@ -46,27 +46,25 @@ class ImageView(Screen):
                 self.showImage(path)              
             elif extension in app.data.videoTypes:
                 self.showVideo(path)                
-
-    @mainthread               
+          
     def showImage(self, path):
         self.stopCurrentVideo()
 
-        imageGrid = self.ids.imageGrid
-        imageGrid.clear_widgets()        
+        self.clearImageWidget()     
         
+        imageGrid = self.ids.imageGrid
         image = Image()                            
         image.source = path
         imageGrid.add_widget(image)   
-
-    @mainthread              
+           
     def showVideo(self, path):
         self.stopCurrentVideo()
 
         if self.currentVideo != None:
             video = self.currentVideo
         else:
+            self.clearImageWidget()         
             imageGrid = self.ids.imageGrid
-            imageGrid.clear_widgets()        
         
             video = VideoPlayer()                            
             imageGrid.add_widget(video)       
@@ -76,9 +74,14 @@ class ImageView(Screen):
         video.source = path
         video.state = 'play'
 
+    def clearImageWidget(self):
+        imageGrid = self.ids.imageGrid
+        imageGrid.clear_widgets()
+        self.currentVideo = None
+
     def stopCurrentVideo(self):
         if self.currentVideo != None:
-            self.currentVideo.state = 'stop'
+            self.currentVideo.state = 'stop'            
             #self.currentVideo.unload()
 
     def clearImage(self):
