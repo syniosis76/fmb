@@ -8,7 +8,6 @@ from kivy.metrics import sp
 from kivy.clock import Clock, mainthread
 from kivy.uix.image import Image
 from kivy.uix.video import Video
-from kivy.core.image import Image as CoreImage
 from kivy.core.window import Window, Keyboard
 from PIL import Image as PILImage
 from io import BytesIO
@@ -22,10 +21,14 @@ def sizeCallback(obj, value):
     obj.text_size = (value[0] - sp(30), sp(20))
 
 class ImageView(Screen):
+    app = None
+    data = None
     currentVideo = None
 
     def __init__(self, **kwargs):
         super(ImageView, self).__init__(**kwargs) 
+        self.app = App.get_running_app()
+        self.data = self.app.data
         Window.bind(on_key_up=self.on_key_up)
         Window.bind(on_key_down=self.on_key_down)                
 
@@ -33,17 +36,15 @@ class ImageView(Screen):
         self.loadMedia()
 
     def loadMedia(self):
-        app = App.get_running_app()
-
-        path = app.thumbnailView.currentFile.path
+        path = self.app.thumbnailView.currentFile.path
 
         parts = os.path.splitext(path)
         if len(parts) == 2:
             extension = parts[1].lower()
 
-            if extension in app.data.imageTypes:        
+            if extension in self.app.data.imageTypes:        
                 self.showImage(path)              
-            elif extension in app.data.videoTypes:
+            elif extension in self.app.data.videoTypes:
                 self.showVideo(path)                
           
     def showImage(self, path):
@@ -96,9 +97,8 @@ class ImageView(Screen):
         self.manager.transition.direction = 'right'
         self.manager.current = 'ThumbnailView'
 
-    def selectImage(self, offset):
-        app = App.get_running_app()                
-        app.thumbnailView.selectImage(offset)
+    def selectImage(self, offset):        
+        self.app.thumbnailView.selectImage(offset)
         self.loadMedia()
 
     def backButtonClick(self, instance):

@@ -1,6 +1,7 @@
 from datetime import datetime
 import os
 import json
+from kivy.metrics import sp
 
 class Data():
   userSettingsPath = os.getenv('LOCALAPPDATA')
@@ -15,12 +16,17 @@ class Data():
   videoTypes = ['.avi', '.mov', '.mp4', '.mpeg4', '.mts', '.mpg', '.mpeg', '.vob', '.mkv']
   allTypes = imageTypes + videoTypes
   folderSettingsFileName = '.fmb'
+  cellWidth = sp(160)
+  cellHeight = cellWidth * 4 / 5
+  marginSize = 0.04
+  thumbnailSize = 1 - (marginSize * 2)
+  thumbnailWidth = cellWidth * thumbnailSize
+  thumbnailHeight = cellHeight * thumbnailSize
 
   def __init__(self):
     self.loadData()     
 
-  def loadData(self):    
-    #self.currentFolder = 'C:\\tmp\\fmbpics' # Todo Remove.
+  def loadData(self):        
     self.load()    
     self.updateVersion()
 
@@ -38,8 +44,7 @@ class Data():
     data['folders'] = self.folders
     data['foldersWidth'] = self.foldersWidth
 
-    if not os.path.exists(self.settingsPath):
-      os.makedirs(self.settingsPath)
+    os.makedirs(self.settingsPath, exist_ok=True)
 
     with open(self.settingsFile, 'w') as filehandle:            
       json.dump(data, filehandle)

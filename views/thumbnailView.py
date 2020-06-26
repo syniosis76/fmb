@@ -21,6 +21,7 @@ import os
 import threading
 
 from models.folder import Folder
+from utilities.thumbnail import Thumbnail
 
 drag_controller = DraggableController()
 
@@ -49,12 +50,8 @@ def sizeCallback(obj, value):
     obj.text_size = (value[0] - sp(30), sp(20))
 
 class ThumbnailView(Screen):
-    cellWidth = sp(160)
-    cellHeight = cellWidth * 4 / 5
-    marginSize = 0.04
-    thumbnailSize = 1 - (marginSize * 2)
-    thumbnailWidth = cellWidth * thumbnailSize
-    thumbnailHeight = cellHeight * thumbnailSize
+    app = None
+    data = None
     columns = 1
     currentIndex = None
     currentImage = None
@@ -63,108 +60,67 @@ class ThumbnailView(Screen):
 
     def __init__(self, **kwargs):        
         super(ThumbnailView, self).__init__(**kwargs)                   
+        self.app = App.get_running_app()
+        self.data = self.app.data        
         self.version = 0
         Window.bind(on_resize=self.on_window_resize)
         Window.bind(on_key_up=self.on_key_up)
         Window.bind(on_key_down=self.on_key_down)
 
-    def on_enter(self):
-        app = App.get_running_app()
-        if app.data.hasUpdated(self.version):      
+    def on_enter(self):        
+        if self.data.hasUpdated(self.version):      
             Clock.schedule_once(lambda x: self.buildUi(), 0.1)        
 
     def on_window_resize(self, window, width, height):
         self.updateGridSize(width)
 
     def changePath(self, path):
-        app = App.get_running_app()
-        app.data.currentFolder = path        
+        self.data.currentFolder = path        
         self.buildUi()
-        app.data.save()
+        self.data.save()
 
     def buildUi(self):
         thumbnailGrid = self.ids.thumbnailGrid
         thumbnailGrid.clear_widgets()
         threading.Thread(target=self.buildUiThread).start()
 
-    def buildUiThread(self):
-        app = App.get_running_app()        
-        self.version = app.data.version
+    def buildUiThread(self):   
+        self.version = self.data.version
         
         folderBox = self.ids.folderBox
-        folderBox.width = sp(app.data.foldersWidth)
+        folderBox.width = sp(self.data.foldersWidth)
 
         thumbnailGrid = self.ids.thumbnailGrid
 
-        thumbnailGridWidth = Window.width - sp(app.data.foldersWidth)
-        self.columns = int(thumbnailGridWidth / self.cellWidth)
+        thumbnailGridWidth = Window.width - sp(self.data.foldersWidth)
+        self.columns = int(thumbnailGridWidth / self.data.cellWidth)
         if self.columns < 1:
             self.columns = 1
 
         thumbnailGrid.cols = self.columns
-        thumbnailGrid.col_default_width = self.cellWidth
+        thumbnailGrid.col_default_width = self.data.cellWidth
         thumbnailGrid.col_force_default = True
-        thumbnailGrid.row_default_height = self.cellHeight
+        thumbnailGrid.row_default_height = self.data.cellHeight
         thumbnailGrid.row_force_default = True
         thumbnailGrid.size_hint_y = None 
 
-        path = app.data.currentFolder
+        path = self.data.currentFolder
 
         self.folder.loadPath(path)
         self.folder.sortByModified()
     
         for file in self.folder.files:
-            if app.closing:
+            if self.app.closing:
                 break                    
-            coreImage = self.getThumbnailImage(file)                            
-            self.addThumbnail(app, thumbnailGrid, file, coreImage)
+            thumbnail = Thumbnail(file)
+            thumbnail.initialiseThumbnail()
+            coreImage = CoreImage(thumbnail.thumbnailPath)
+            self.addThumbnail(thumbnailGrid, file, coreImage)
 
-        self.version = app.data.version                          
-
-    def getThumbnailImage(self, mediaFile):
-        app = App.get_running_app()        
-        
-        thumbnailPath = os.path.join(app.data.currentWorkingFolder, mediaFile.name + '.tn')
-        
-        if os.path.exists(thumbnailPath):
-            return CoreImage(thumbnailPath)
-        else:
-            # Ensure Working folder exists:
-            os.makedirs(app.data.currentWorkingFolder, exist_ok=True)                        
-
-            try:
-                if mediaFile.extension in app.data.imageTypes:
-                    # Load Image
-                    pilImage = PILImage.open(mediaFile.path)                
-                elif mediaFile.extension in app.data.videoTypes:
-                    buffer, error = (
-                        ffmpeg
-                        .input(mediaFile.path)
-                        .filter('select', 'gte(n,{})'.format(60))
-                        .output('pipe:', vframes=1, format='image2', vcodec='mjpeg')
-                        .run(capture_stdout=True)
-                    )
-
-                    pilImage = PILImage.open(BytesIO(buffer))
-                
-                # Make Thumbnail
-                pilImage.thumbnail((self.thumbnailWidth, self.thumbnailHeight))
-            except:
-                pilImage = PILImage.new(mode='RGBA',size=(int(self.thumbnailWidth), int(self.thumbnailHeight)),color=(128,0,0,128))                        
-
-            # Save to Stream
-            data = BytesIO()
-            pilImage.save(data, format='png')
-            # Save Stream to File
-            data.seek(0)
-            with open(thumbnailPath, "wb") as outfile:                
-                outfile.write(data.getbuffer())
-            # Return Image 
-            data.seek(0)          
-            return CoreImage(BytesIO(data.read()), ext='png')
+        self.version = self.data.version                                           
 
     @mainthread               
-    def addThumbnail(self, app, thumbnailGrid, mediaFile, coreImage):        
+    def addThumbnail(self, thumbnailGrid, mediaFile, coreImage):        
         thumbnailWidget = ThumbnailWidget()
         thumbnailWidget.drag_cls = 'thumbnailLayout'        
         thumbnailWidget.bind(on_touch_down = self.thumbnailTouchDown)        
@@ -173,8 +129,8 @@ class ThumbnailView(Screen):
         thumbnailImage = ThumbnailImage() 
         thumbnailWidget.drag_cls = 'thumbnailLayout'                         
         thumbnailImage.texture = coreImage.texture        
-        thumbnailImage.pos_hint = {'x': self.marginSize, 'y': self.marginSize}
-        thumbnailImage.size_hint = (self.thumbnailSize, self.thumbnailSize)    
+        thumbnailImage.pos_hint = {'x': self.data.marginSize, 'y': self.data.marginSize}
+        thumbnailImage.size_hint = (self.data.thumbnailSize, self.data.thumbnailSize)    
         thumbnailImage.mediaFile = mediaFile
         thumbnailImage.bind(pos = self.thumbnailPosChanged)
 
@@ -212,11 +168,9 @@ class ThumbnailView(Screen):
             object.canvas.after.clear()
 
     def updateGridSize(self, width):
-        app = App.get_running_app()  
-
         thumbnailGrid = self.ids.thumbnailGrid
-        thumbnailGridWidth = width - sp(app.data.foldersWidth)
-        self.columns = int(thumbnailGridWidth / self.cellWidth)
+        thumbnailGridWidth = width - sp(self.data.foldersWidth)
+        self.columns = int(thumbnailGridWidth / self.data.cellWidth)
         if self.columns < 1:
             self.columns = 1
         thumbnailGrid.cols = self.columns
@@ -224,7 +178,7 @@ class ThumbnailView(Screen):
         rows = int(count / self.columns)
         if count % self.columns > 0:
             rows = rows + 1
-        newHeight = self.cellHeight * rows
+        newHeight = self.data.cellHeight * rows
         if thumbnailGrid.height != newHeight:
             thumbnailGrid.height = newHeight
             
