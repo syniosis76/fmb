@@ -7,8 +7,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.metrics import sp
 from kivy.clock import Clock, mainthread
 from kivy.uix.image import Image
-from kivy.uix.videoplayer import VideoPlayer
-#from kivy.uix.video import Video
+from kivy.uix.video import Video
 from kivy.core.image import Image as CoreImage
 from kivy.core.window import Window, Keyboard
 from PIL import Image as PILImage
@@ -36,7 +35,7 @@ class ImageView(Screen):
     def loadMedia(self):
         app = App.get_running_app()
 
-        path = app.thumbnailView.currentFile
+        path = app.thumbnailView.currentFile.path
 
         parts = os.path.splitext(path)
         if len(parts) == 2:
@@ -55,6 +54,7 @@ class ImageView(Screen):
         imageGrid = self.ids.imageGrid
         image = Image()                            
         image.source = path
+        image.allow_stretch = True
         imageGrid.add_widget(image)   
            
     def showVideo(self, path):
@@ -66,9 +66,9 @@ class ImageView(Screen):
             self.clearImageWidget()         
             imageGrid = self.ids.imageGrid
         
-            video = VideoPlayer()                            
+            video = Video()
             imageGrid.add_widget(video)       
-            video.options['allow_stretch'] = True
+            video.allow_stretch = True
             self.currentVideo = video
             
         video.source = path
@@ -82,7 +82,7 @@ class ImageView(Screen):
     def stopCurrentVideo(self):
         if self.currentVideo != None:
             self.currentVideo.state = 'stop'            
-            #self.currentVideo.unload()
+            self.currentVideo.unload()
 
     def clearImage(self):
         self.currentVideo = None

@@ -16,9 +16,10 @@ from PIL import Image as PILImage
 from kivy.core.window import Window, Keyboard
 import ffmpeg
 from io import BytesIO
-
 import os
 import threading
+
+from models.folder import Folder
 
 drag_controller = DraggableController()
 
@@ -56,7 +57,8 @@ class ThumbnailView(Screen):
     columns = 1
     currentIndex = None
     currentImage = None
-    currentFile = None    
+    currentFile = None
+    folder = Folder()    
 
     def __init__(self, **kwargs):        
         super(ThumbnailView, self).__init__(**kwargs)                   
@@ -97,27 +99,23 @@ class ThumbnailView(Screen):
         thumbnailGrid.row_force_default = True
         thumbnailGrid.size_hint_y = None 
 
-        folder = app.data.currentFolder
+        path = app.data.currentFolder
+
+        self.folder.loadPath(path)
+        self.folder.sortByModified()
     
-        with os.scandir(folder) as scandir:
-            for entry in scandir:
-                if app.closing:
-                    break
-                if entry.is_file:
-                    parts = os.path.splitext(entry.name)
-                    if len(parts) == 2:
-                        extension = parts[1].lower()
-                        if extension in app.data.allTypes:                            
-                            coreImage = self.getThumbnailImage(entry.path, extension)                            
-                            self.addThumbnail(app, thumbnailGrid, entry.path, coreImage)
+        for file in self.folder.files:
+            if app.closing:
+                break                    
+            coreImage = self.getThumbnailImage(file)                            
+            self.addThumbnail(app, thumbnailGrid, file, coreImage)
 
-        self.version = app.data.version                      
+        self.version = app.data.version                          
 
-    def getThumbnailImage(self, path, extension):
+    def getThumbnailImage(self, mediaFile):
         app = App.get_running_app()        
-
-        fileName = os.path.basename(path)
-        thumbnailPath = os.path.join(app.data.currentWorkingFolder, fileName + '.tn')
+        
+        thumbnailPath = os.path.join(app.data.currentWorkingFolder, mediaFile.name + '.tn')
         
         if os.path.exists(thumbnailPath):
             return CoreImage(thumbnailPath)
@@ -125,13 +123,13 @@ class ThumbnailView(Screen):
             # Ensure Working folder exists:
             os.makedirs(app.data.currentWorkingFolder, exist_ok=True)                        
 
-            if extension in app.data.imageTypes:
+            if mediaFile.extension in app.data.imageTypes:
                 # Load Image
-                pilImage = PILImage.open(path)                
-            elif extension in app.data.videoTypes:
+                pilImage = PILImage.open(mediaFile.path)                
+            elif mediaFile.extension in app.data.videoTypes:
                 buffer, error = (
                     ffmpeg
-                    .input(path)
+                    .input(mediaFile.path)
                     .filter('select', 'gte(n,{})'.format(60))
                     .output('pipe:', vframes=1, format='image2', vcodec='mjpeg')
                     .run(capture_stdout=True)
@@ -154,7 +152,7 @@ class ThumbnailView(Screen):
             return CoreImage(BytesIO(data.read()), ext='png')
 
     @mainthread               
-    def addThumbnail(self, app, thumbnailGrid, path, coreImage):        
+    def addThumbnail(self, app, thumbnailGrid, mediaFile, coreImage):        
         thumbnailWidget = ThumbnailWidget()
         thumbnailWidget.drag_cls = 'thumbnailLayout'        
         thumbnailWidget.bind(on_touch_down = self.thumbnailTouchDown)        
@@ -165,7 +163,7 @@ class ThumbnailView(Screen):
         thumbnailImage.texture = coreImage.texture        
         thumbnailImage.pos_hint = {'x': self.marginSize, 'y': self.marginSize}
         thumbnailImage.size_hint = (self.thumbnailSize, self.thumbnailSize)    
-        thumbnailImage.filePath = path
+        thumbnailImage.mediaFile = mediaFile
         thumbnailImage.bind(pos = self.thumbnailPosChanged)
 
         thumbnailWidget.add_widget(thumbnailImage)
@@ -231,7 +229,7 @@ class ThumbnailView(Screen):
                     thumbnailGrid = self.ids.thumbnailGrid
                     self.currentIndex = thumbnailGrid.children.index(widget)
                     self.currentImage = image
-                    self.currentFile = image.filePath
+                    self.currentFile = image.mediaFile
 
                     self.showSelected(image)
 
@@ -265,7 +263,7 @@ class ThumbnailView(Screen):
             thumbnailWidget = thumbnailGrid.children[newIndex]
             image = thumbnailWidget.children[0]
             self.currentImage = image
-            self.currentFile = image.filePath
+            self.currentFile = image.mediaFile
 
             self.showSelected(image)
 
