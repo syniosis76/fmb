@@ -20,7 +20,7 @@ class Data():
     self.loadData()     
 
   def loadData(self):    
-    self.currentFolder = 'C:\\tmp\\fmbpics' # Todo Remove.
+    #self.currentFolder = 'C:\\tmp\\fmbpics' # Todo Remove.
     self.load()    
     self.updateVersion()
 

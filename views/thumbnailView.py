@@ -14,6 +14,7 @@ from kivy.core.window import Window
 from kivy.core.image import Image as CoreImage
 from PIL import Image as PILImage
 from kivy.core.window import Window, Keyboard
+from plyer import filechooser
 import ffmpeg
 from io import BytesIO
 import os
@@ -75,7 +76,15 @@ class ThumbnailView(Screen):
     def on_window_resize(self, window, width, height):
         self.updateGridSize(width)
 
+    def changePath(self, path):
+        app = App.get_running_app()
+        app.data.currentFolder = path        
+        self.buildUi()
+        app.data.save()
+
     def buildUi(self):
+        thumbnailGrid = self.ids.thumbnailGrid
+        thumbnailGrid.clear_widgets()
         threading.Thread(target=self.buildUiThread).start()
 
     def buildUiThread(self):
@@ -123,22 +132,25 @@ class ThumbnailView(Screen):
             # Ensure Working folder exists:
             os.makedirs(app.data.currentWorkingFolder, exist_ok=True)                        
 
-            if mediaFile.extension in app.data.imageTypes:
-                # Load Image
-                pilImage = PILImage.open(mediaFile.path)                
-            elif mediaFile.extension in app.data.videoTypes:
-                buffer, error = (
-                    ffmpeg
-                    .input(mediaFile.path)
-                    .filter('select', 'gte(n,{})'.format(60))
-                    .output('pipe:', vframes=1, format='image2', vcodec='mjpeg')
-                    .run(capture_stdout=True)
-                )
+            try:
+                if mediaFile.extension in app.data.imageTypes:
+                    # Load Image
+                    pilImage = PILImage.open(mediaFile.path)                
+                elif mediaFile.extension in app.data.videoTypes:
+                    buffer, error = (
+                        ffmpeg
+                        .input(mediaFile.path)
+                        .filter('select', 'gte(n,{})'.format(60))
+                        .output('pipe:', vframes=1, format='image2', vcodec='mjpeg')
+                        .run(capture_stdout=True)
+                    )
 
-                pilImage = PILImage.open(BytesIO(buffer))
-            
-            # Make Thumbnail
-            pilImage.thumbnail((self.thumbnailWidth, self.thumbnailHeight))
+                    pilImage = PILImage.open(BytesIO(buffer))
+                
+                # Make Thumbnail
+                pilImage.thumbnail((self.thumbnailWidth, self.thumbnailHeight))
+            except:
+                pilImage = PILImage.new(mode='RGBA',size=(int(self.thumbnailWidth), int(self.thumbnailHeight)),color=(128,0,0,128))                        
 
             # Save to Stream
             data = BytesIO()
@@ -205,7 +217,11 @@ class ThumbnailView(Screen):
         if self.columns < 1:
             self.columns = 1
         thumbnailGrid.cols = self.columns
-        thumbnailGrid.height = self.cellHeight * int(len(thumbnailGrid.children) / self.columns + 0.5)
+        count = len(thumbnailGrid.children)                
+        rows = int(count / self.columns)
+        if count % self.columns > 0:
+            rows = rows + 1
+        thumbnailGrid.height = self.cellHeight * rows
 
         # The selection dissappears on resize so show again.
         Clock.schedule_once(lambda x: self.showSelected(self.currentImage), 0.1)         
@@ -266,6 +282,13 @@ class ThumbnailView(Screen):
             self.currentFile = image.mediaFile
 
             self.showSelected(image)
+    
+    def openFolderClick(self):
+        filechooser.choose_dir(on_selection=self.onSelectPath)
+
+    def onSelectPath(self, selection):
+        if selection:
+            self.changePath(selection[0])
 
     def on_key_down(self, window, keycode, text, modifiers, x):
         if self.manager.current == self.name:

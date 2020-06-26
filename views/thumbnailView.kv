@@ -13,6 +13,11 @@
       id: folderBox
       size_hint_x: None
       width: '200sp'
+      Button:
+        text: 'Open Folder'
+        on_press: root.openFolderClick()
+        size_hint_y: None
+        height: '30sp'
     BoxLayout:
       id: thumbnailBox
       size_hint_x: 1
@@ -21,7 +26,7 @@
         size_hint_x: 1.0
         size_hint_y: 1.0
         do_scroll_x: False
-        scroll_wheel_distance: '60sp'
+        scroll_wheel_distance: '90sp'
         scroll_type: ['bars']
         DraggableGridLayout:
           id: thumbnailGrid
