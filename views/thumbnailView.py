@@ -181,6 +181,9 @@ class ThumbnailView(Screen):
         thumbnailWidget.add_widget(thumbnailImage)
         thumbnailGrid.add_widget(thumbnailWidget)
 
+        if self.currentIndex:
+            self.currentIndex = self.currentIndex + 1
+
         self.updateGridSize(Window.width)
 
     def showSelected(self, object):
@@ -221,10 +224,12 @@ class ThumbnailView(Screen):
         rows = int(count / self.columns)
         if count % self.columns > 0:
             rows = rows + 1
-        thumbnailGrid.height = self.cellHeight * rows
-
-        # The selection dissappears on resize so show again.
-        Clock.schedule_once(lambda x: self.showSelected(self.currentImage), 0.1)         
+        newHeight = self.cellHeight * rows
+        if thumbnailGrid.height != newHeight:
+            thumbnailGrid.height = newHeight
+            
+            # The selection dissappears on resize so show again.
+            #Clock.schedule_once(lambda x: self.showSelected(self.currentImage), 0.1)         
 
     def getWidgetAt(self, x, y):
         thumbnailGrid = self.ids.thumbnailGrid
