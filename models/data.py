@@ -9,6 +9,7 @@ class Data():
   settingsFile = os.path.join(settingsPath, 'data.data')  
   folders = []
   foldersWidth = 200
+  rootFolder = None
   currentFolder = None
   currentFile = None  
   version = 0
@@ -22,6 +23,7 @@ class Data():
   thumbnailSize = 1 - (marginSize * 2)
   thumbnailWidth = cellWidth * thumbnailSize
   thumbnailHeight = cellHeight * thumbnailSize
+  folderHeight = sp(30)
 
   def __init__(self):
     self.loadData()     
@@ -34,12 +36,14 @@ class Data():
     if os.path.exists(self.settingsFile):
       with open(self.settingsFile, 'rb') as filehandle:            
         data = json.load(filehandle)
+        self.rootFolder = data.get('rootFolder', self.rootFolder)
         self.currentFolder = data.get('currentFolder', self.currentFolder)
         self.folders = data.get('folders', self.folders)        
         self.foldersWidth = data.get('foldersWidth', self.foldersWidth)  
 
   def save(self):
     data = {}
+    data['rootFolder'] = self.rootFolder
     data['currentFolder'] = self.currentFolder
     data['folders'] = self.folders
     data['foldersWidth'] = self.foldersWidth

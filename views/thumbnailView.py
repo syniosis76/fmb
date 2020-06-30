@@ -72,19 +72,24 @@ class ThumbnailView(Screen):
             Clock.schedule_once(lambda x: self.buildUi(), 0.1)        
 
     def on_window_resize(self, window, width, height):
-        self.updateGridSize(width)
+        self.updateThumbnailGridSize(width)
+        self.updateFolderGridSize()
 
     def changePath(self, path):
         self.data.currentFolder = path        
-        self.buildUi()
+        self.showThumbnails()
         self.data.save()
 
-    def buildUi(self):
+    def buildUi(self):        
+        self.showThumbnails()        
+        self.showFolders()
+    
+    def showThumbnails(self):
         thumbnailGrid = self.ids.thumbnailGrid
         thumbnailGrid.clear_widgets()
-        threading.Thread(target=self.buildUiThread).start()
+        threading.Thread(target=self.showThumbnailsThread).start()
 
-    def buildUiThread(self):   
+    def showThumbnailsThread(self):   
         self.version = self.data.version
         
         folderBox = self.ids.folderBox
@@ -140,7 +145,7 @@ class ThumbnailView(Screen):
         if self.currentIndex:
             self.currentIndex = self.currentIndex + 1
 
-        self.updateGridSize(Window.width)
+        self.updateThumbnailGridSize(Window.width)
 
     def showSelected(self, object):
         if object:
@@ -167,7 +172,7 @@ class ThumbnailView(Screen):
         if object:
             object.canvas.after.clear()
 
-    def updateGridSize(self, width):
+    def updateThumbnailGridSize(self, width):
         thumbnailGrid = self.ids.thumbnailGrid
         thumbnailGridWidth = width - sp(self.data.foldersWidth)
         self.columns = int(thumbnailGridWidth / self.data.cellWidth)
@@ -180,10 +185,7 @@ class ThumbnailView(Screen):
             rows = rows + 1
         newHeight = self.data.cellHeight * rows
         if thumbnailGrid.height != newHeight:
-            thumbnailGrid.height = newHeight
-            
-            # The selection dissappears on resize so show again.
-            #Clock.schedule_once(lambda x: self.showSelected(self.currentImage), 0.1)         
+            thumbnailGrid.height = newHeight       
 
     def getWidgetAt(self, x, y):
         thumbnailGrid = self.ids.thumbnailGrid
@@ -242,12 +244,14 @@ class ThumbnailView(Screen):
 
             self.showSelected(image)
     
-    def openFolderClick(self):
-        filechooser.choose_dir(on_selection=self.onSelectPath)
+    def openRootFolderClick(self):
+        filechooser.choose_dir(on_selection=self.onSelectRootFolder)
 
-    def onSelectPath(self, selection):
+    def onSelectRootFolder(self, selection):
         if selection:
-            self.changePath(selection[0])
+            self.data.rootFolder = selection[0]
+            self.showFolders()
+            self.data.save()
 
     def on_key_down(self, window, keycode, text, modifiers, x):
         if self.manager.current == self.name:
@@ -267,3 +271,51 @@ class ThumbnailView(Screen):
     def on_key_up(self, window, keycode, text):
         if self.manager.current == self.name:
             print('ThumbnailView Key Up: ' + str(keycode))
+
+    def showFolders(self):
+        folderGrid = self.ids.folderGrid
+        folderGrid.clear_widgets()
+        threading.Thread(target=self.showFoldersThread).start()
+
+    def showFoldersThread(self):
+        path = self.data.rootFolder
+        folders = []
+        with os.scandir(path) as scandir:
+            for entry in scandir:
+                if self.app.closing:
+                    break
+                if entry.is_dir():
+                    folders.append((entry.path, entry.name))
+        
+        folders.sort(key = lambda entry: entry[1])
+
+        folderGrid = self.ids.folderGrid        
+        for (path, name) in folders:
+            if self.app.closing:
+                break
+            self.addFolder(folderGrid, path, name)                    
+
+    @mainthread               
+    def addFolder(self, foldersGrid, path, name):                
+        button = Button()
+        button.text = name
+        button.fmbPath = path
+        button.size_hint = (1, None)
+        button.height = self.data.folderHeight
+        button.bind(on_press = self.folderButtonClick)
+
+        foldersGrid.add_widget(button)
+
+        self.updateFolderGridSize()
+
+    def updateFolderGridSize(self):
+        foldersGrid = self.ids.folderGrid
+        rows = len(foldersGrid.children) 
+        newHeight = self.data.folderHeight * rows
+        if foldersGrid.height != newHeight:
+            foldersGrid.height = newHeight
+    
+    def folderButtonClick(self, widget):
+        self.changePath(widget.fmbPath)
+
+
