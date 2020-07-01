@@ -1,7 +1,6 @@
 import os
 os.environ['KIVY_WINDOW'] = 'sdl2'
-os.environ['KIVY_VIDEO'] = 'gstplayer'
-#os.environ['KIVY_VIDEO'] = 'ffpyplayer'
+os.environ['KIVY_VIDEO'] = 'ffpyplayer'
 
 import kivy
 kivy.require('1.11.1')

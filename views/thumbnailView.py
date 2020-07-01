@@ -15,8 +15,6 @@ from kivy.core.image import Image as CoreImage
 from PIL import Image as PILImage
 from kivy.core.window import Window, Keyboard
 from plyer import filechooser
-import ffmpeg
-from io import BytesIO
 import os
 import threading
 
