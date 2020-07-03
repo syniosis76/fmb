@@ -101,6 +101,23 @@ class ImageView(Screen):
         self.app.thumbnailView.selectImage(offset)
         self.loadMedia()
 
+    def videoPlayPause(self):
+        if self.currentVideo:
+            video = self.currentVideo
+            if video.state == 'play':
+                video.state = 'pause'
+            else:
+                video.state = 'play'            
+
+    def videoSeekBySeconds(self, seconds):
+        if self.currentVideo:
+            video = self.currentVideo
+            duration = video.duration
+            position = video.position
+            newPosition = position + seconds
+            newPositionPercent = newPosition / duration
+            video.seek(newPositionPercent, precise = False)
+
     def backButtonClick(self, instance):
         print('Back button clicked.')        
         self.goToThumbnailView()
@@ -110,10 +127,16 @@ class ImageView(Screen):
             print('ImageView Key Down: ' + str(keycode))
             if keycode == Keyboard.keycodes['escape']:
                 self.goToThumbnailView()
-            if keycode == Keyboard.keycodes['right']:
+            elif keycode == Keyboard.keycodes['right']:
                 self.selectImage(-1)
             elif keycode == Keyboard.keycodes['left']:
                 self.selectImage(1)
+            elif keycode in [Keyboard.keycodes['spacebar'], Keyboard.keycodes['p']]:
+                self.videoPlayPause()
+            elif keycode == Keyboard.keycodes[',']:
+                self.videoSeekBySeconds(-10)
+            elif keycode == Keyboard.keycodes['.']:
+                self.videoSeekBySeconds(10)
     
     def on_key_up(self, window, keycode, text):
         if self.manager.current == self.name:
