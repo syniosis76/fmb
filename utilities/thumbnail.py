@@ -42,9 +42,15 @@ class Thumbnail():
           image = None
                 
       image.thumbnail((self.data.thumbnailWidth, self.data.thumbnailHeight))
+
+      if self.mediaFile.extension in self.app.data.videoTypes:
+        if self.data.videoThumbnailOverlay == None:
+          self.data.videoThumbnailOverlay = Image.open('images\\video-overlay.png')
+        overlay = self.data.videoThumbnailOverlay
+        image.paste(overlay, (4, image.height - 28), overlay)
     except:
-      image = Image.new(mode='RGBA',size=(int(self.data.thumbnailWidth), int(self.data.thumbnailHeight)),color=(128,0,0,128)) 
       print(sys.exc_info()[0])
+      image = Image.new(mode='RGBA',size=(int(self.data.thumbnailWidth), int(self.data.thumbnailHeight)),color=(128,0,0,128))       
     
     image.save(self.thumbnailPath, format='png') 
   

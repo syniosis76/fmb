@@ -17,6 +17,7 @@ from kivy.core.window import Window, Keyboard
 from plyer import filechooser
 import os
 import threading
+from send2trash import send2trash
 
 from models.folder import Folder
 from utilities.thumbnail import Thumbnail
@@ -117,6 +118,7 @@ class ThumbnailView(Screen):
                 break                    
             thumbnail = Thumbnail(file)
             thumbnail.initialiseThumbnail()
+            file.thumbnailPath = thumbnail.thumbnailPath
             coreImage = CoreImage(thumbnail.thumbnailPath)
             self.addThumbnail(thumbnailGrid, file, coreImage)
 
@@ -235,13 +237,27 @@ class ThumbnailView(Screen):
                 newIndex = len(thumbnailGrid.children) - 1
 
             self.currentIndex = newIndex
-            thumbnailWidget = thumbnailGrid.children[newIndex]
+            thumbnailWidget = thumbnailGrid.children[newIndex]                        
             image = thumbnailWidget.children[0]
             self.currentImage = image
             self.currentFile = image.mediaFile
 
             self.showSelected(image)
+
+    def delete(self):
+        if self.currentImage:
+            currentImage = self.currentImage
+            file = currentImage.mediaFile
+            widget = self.currentImage.parent
+            thumbnailGrid = self.ids.thumbnailGrid
+            thumbnailGrid.remove_widget(widget)
+            self.selectImage(-1)
+            threading.Thread(target=(lambda: self.deleteThread(file))).start()
     
+    def deleteThread(self, file):        
+        os.remove(file.thumbnailPath)
+        send2trash(file.path)
+
     def openRootFolderClick(self):
         filechooser.choose_dir(on_selection=self.onSelectRootFolder)
 

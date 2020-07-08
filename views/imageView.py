@@ -115,7 +115,8 @@ class ImageView(Screen):
                 video.state = 'play'            
     
     def delete(self):
-        pass
+        self.app.thumbnailView.delete()
+        self.loadMedia()
 
     def videoSeekBySeconds(self, seconds):
         if self.currentVideo:

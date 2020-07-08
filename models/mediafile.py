@@ -2,6 +2,7 @@ import os
 
 class MediaFile():
   path: None
+  thumbnailPath: None
   name: None  
   extension: None
   modified: None

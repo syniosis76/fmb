@@ -24,6 +24,7 @@ class Data():
   thumbnailWidth = cellWidth * thumbnailSize
   thumbnailHeight = cellHeight * thumbnailSize
   folderHeight = sp(30)
+  videoThumbnailOverlay = None
 
   def __init__(self):
     self.loadData()     
