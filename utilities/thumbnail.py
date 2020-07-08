@@ -64,7 +64,8 @@ class Thumbnail():
         frame = None    
         while not frame:
             frame = player.get_frame(force_refresh=True)[0]
-            time.sleep(0.01)
+            if not frame:
+              time.sleep(0.01)
         
         player.close_player()
         if frame:
