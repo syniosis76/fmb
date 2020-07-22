@@ -6,6 +6,8 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.metrics import sp
 from kivy.clock import Clock, mainthread
+from kivy.core.image import Image as CoreImage
+from kivy.graphics.texture import Texture
 from kivy.uix.image import Image
 from kivy.uix.video import Video
 from kivy.core.window import Window, Keyboard
@@ -31,10 +33,15 @@ class ImageView(Screen):
         super(ImageView, self).__init__(**kwargs) 
         self.app = App.get_running_app()
         self.data = self.app.data
+        Window.bind(on_resize=self.on_window_resize)
         Window.bind(on_key_up=self.on_key_up)
         Window.bind(on_key_down=self.on_key_down)                
 
-    def on_pre_enter(self):        
+    def on_window_resize(self, window, width, height):
+        if self.currentVideo == None:
+            self.loadMedia()
+
+    def on_enter(self):        
         self.loadMedia()
 
     def loadMedia(self):
@@ -51,12 +58,45 @@ class ImageView(Screen):
           
     def showImage(self, path):
         self.stopCurrentVideo()
+        self.clearImageWidget()
 
-        self.clearImageWidget()     
-        
         imageGrid = self.ids.imageGrid
-        image = Image()                            
-        image.source = path
+
+        startTime = time.process_time() 
+
+        pilImage = PILImage.open(path)        
+        width, height = pilImage.size
+        ratio = width / height
+
+        displayWidth = imageGrid.size[0]
+        displayHeight = imageGrid.size[1]
+        displayRatio = displayWidth / displayHeight
+
+        if ratio <= displayRatio:
+            newWidth = int(displayWidth)
+            newHeight = int(displayWidth / ratio)
+        else:
+            newHeight = int(displayHeight)
+            newWidth = int(displayHeight * ratio)            
+        
+        pilImage.draft("RGB", (newWidth, newHeight))
+
+        #print('Draft', pilImage.size)
+        #pilImage = pilImage.resize((newWidth, newHeight))
+        #print('Resize', pilImage.size)     
+
+        pilImage = pilImage.convert('RGBA')
+        bytes = pilImage.tobytes()        
+        texture = Texture.create(size = pilImage.size)
+        texture.blit_buffer(bytes, colorfmt='rgba', bufferfmt='ubyte')        
+        texture.flip_vertical()
+                
+        image = Image()
+        image.texture = texture
+
+        endTime = time.process_time()
+        #print(endTime - startTime)
+
         image.allow_stretch = True
         imageGrid.add_widget(image)   
            
@@ -160,7 +200,7 @@ class ImageView(Screen):
 
     def on_key_down(self, window, keycode, text, modifiers, x):        
         if self.manager.current == self.name:
-            print('ImageView Key Down: ' + str(keycode))
+            #print('ImageView Key Down: ' + str(keycode))
             # Navigation
             if keycode == Keyboard.keycodes['escape']:
                 self.goToThumbnailView()            
@@ -184,4 +224,4 @@ class ImageView(Screen):
     
     def on_key_up(self, window, keycode, text):
         if self.manager.current == self.name:
-            print('ImagveView Key Up: ' + str(keycode))
+            pass #print('ImagveView Key Up: ' + str(keycode))

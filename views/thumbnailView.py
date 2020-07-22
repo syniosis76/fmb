@@ -269,7 +269,7 @@ class ThumbnailView(Screen):
 
     def on_key_down(self, window, keycode, text, modifiers, x):
         if self.manager.current == self.name:
-            print('ThumbnailView Key Down: ' + str(keycode))
+            #print('ThumbnailView Key Down: ' + str(keycode))
             if keycode == Keyboard.keycodes['right']:
                 self.selectImage(-1)
             elif keycode == Keyboard.keycodes['left']:
@@ -284,7 +284,7 @@ class ThumbnailView(Screen):
     
     def on_key_up(self, window, keycode, text):
         if self.manager.current == self.name:
-            print('ThumbnailView Key Up: ' + str(keycode))
+            pass #print('ThumbnailView Key Up: ' + str(keycode))
 
     def showFolders(self):
         folderGrid = self.ids.folderGrid
