@@ -12,12 +12,17 @@
           size: self.size      
       id: folderBox
       size_hint_x: None
-      width: '200sp'      
-      Button:
-        text: 'Open Folder'
-        on_press: root.openRootFolderClick()
+      width: '200sp'
+      GridLayout:
+        cols: 2     
         size_hint_y: None
         height: '30sp'
+        Button:
+          text: 'Home'
+          on_press: root.openHomeFolderClick()          
+        Button:
+          text: 'Up'
+          on_press: root.openParentFolderClick()
       BoxLayout:        
         size_hint_x: 1
         ScrollView:          

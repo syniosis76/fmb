@@ -45,16 +45,17 @@ class ImageView(Screen):
         self.loadMedia()
 
     def loadMedia(self):
-        path = self.app.thumbnailView.currentFile.path
+        if self.app.thumbnailView.currentFile:
+            path = self.app.thumbnailView.currentFile.path
 
-        parts = os.path.splitext(path)
-        if len(parts) == 2:
-            extension = parts[1].lower()
+            parts = os.path.splitext(path)
+            if len(parts) == 2:
+                extension = parts[1].lower()
 
-            if extension in self.app.data.imageTypes:        
-                self.showImage(path)              
-            elif extension in self.app.data.videoTypes:
-                self.showVideo(path)                
+                if extension in self.app.data.imageTypes:        
+                    self.showImage(path)              
+                elif extension in self.app.data.videoTypes:
+                    self.showVideo(path)                
           
     def showImage(self, path):
         self.stopCurrentVideo()

@@ -14,7 +14,6 @@ from kivy.core.window import Window
 from kivy.core.image import Image as CoreImage
 from PIL import Image as PILImage
 from kivy.core.window import Window, Keyboard
-from plyer import filechooser
 import os
 import threading
 from send2trash import send2trash
@@ -261,11 +260,29 @@ class ThumbnailView(Screen):
     def openRootFolderClick(self):
         filechooser.choose_dir(on_selection=self.onSelectRootFolder)
 
+    def openHomeFolderClick(self):
+        self.data.rootFolder = ''
+        self.showFolders()
+        self.data.save()
+
+    def openParentFolderClick(self):
+        parentFolder = os.path.dirname(self.data.rootFolder)
+        if parentFolder == self.data.rootFolder or not os.path.exists(parentFolder):
+            parentFolder = ''        
+        self.data.rootFolder = parentFolder
+        self.showFolders() 
+        self.data.save()
+
     def onSelectRootFolder(self, selection):
         if selection:
-            self.data.rootFolder = selection[0]
-            self.showFolders()
-            self.data.save()
+            self.showRootFolder(selection[0])
+
+    def showRootFolder(self, path):
+        self.data.rootFolder = path
+        self.data.currentFolder = path
+        self.showFolders()                
+        self.showThumbnails()
+        self.data.save()
 
     def on_key_down(self, window, keycode, text, modifiers, x):
         if self.manager.current == self.name:
@@ -294,14 +311,35 @@ class ThumbnailView(Screen):
     def showFoldersThread(self):
         path = self.data.rootFolder
         folders = []
-        with os.scandir(path) as scandir:
-            for entry in scandir:
-                if self.app.closing:
-                    break
-                if entry.is_dir():
-                    folders.append((entry.path, entry.name))
+        if self.data.rootFolder == '':
+            home = os.path.expanduser('~')
+
+            entry = os.path.join(home, 'Pictures')
+            if os.path.exists(entry):
+                folders.append((entry, 'Pictures')) 
+
+            entry = os.path.join(home, 'Videos')
+            if os.path.exists(entry):
+                folders.append((entry, 'Videos')) 
+
+            entry = os.path.join(home, 'Documents')
+            if os.path.exists(entry):
+                folders.append((entry, 'Documents'))
+            
+            folders.append((home, 'Home'))
+            for drive in range(ord('A'), ord('Z')):
+                entry = chr(drive) + ':'
+                if os.path.exists(entry):
+                    folders.append((entry + '/', entry))            
+        else:
+            with os.scandir(path) as scandir:
+                for entry in scandir:
+                    if self.app.closing:
+                        break
+                    if entry.is_dir() and not entry.name.startswith('.'):
+                        folders.append((entry.path, entry.name))
         
-        folders.sort(key = lambda entry: entry[1])
+            folders.sort(key = lambda entry: entry[1])
 
         folderGrid = self.ids.folderGrid        
         for (path, name) in folders:
@@ -330,6 +368,9 @@ class ThumbnailView(Screen):
             foldersGrid.height = newHeight
     
     def folderButtonClick(self, widget):
-        self.changePath(widget.fmbPath)
+        if widget.last_touch.is_double_tap:
+            self.showRootFolder(widget.fmbPath)
+        else:
+            self.changePath(widget.fmbPath)
 
 
