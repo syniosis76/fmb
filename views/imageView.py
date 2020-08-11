@@ -1,22 +1,16 @@
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
-from kivy.uix.button import Button
-from kivy.uix.gridlayout import GridLayout
-from kivy.uix.floatlayout import FloatLayout
 from kivy.metrics import sp
-from kivy.clock import Clock, mainthread
-from kivy.core.image import Image as CoreImage
 from kivy.graphics.texture import Texture
 from kivy.uix.image import Image
 from kivy.uix.video import Video
 from kivy.core.window import Window, Keyboard
 from PIL import Image as PILImage
-from io import BytesIO
 
 import os
-import threading
 import time
+import traceback
 
 Builder.load_file('views/imageView.kv')
 
@@ -63,7 +57,7 @@ class ImageView(Screen):
 
         imageGrid = self.ids.imageGrid
 
-        startTime = time.process_time() 
+        #startTime = time.process_time() 
 
         pilImage = PILImage.open(path)        
         width, height = pilImage.size
@@ -95,7 +89,7 @@ class ImageView(Screen):
         image = Image()
         image.texture = texture
 
-        endTime = time.process_time()
+        #endTime = time.process_time()
         #print(endTime - startTime)
 
         image.allow_stretch = True
@@ -117,8 +111,13 @@ class ImageView(Screen):
             video.allow_stretch = True
             self.currentVideo = video
             self.currentFrameRate = 30
-            
-        video.source = path
+
+        try:    
+            video.source = path
+        except:
+            print('Video Error:', path)
+            traceback.print_exc()
+
         video.state = 'play'
 
     def clearImageWidget(self):

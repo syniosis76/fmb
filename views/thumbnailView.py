@@ -5,14 +5,12 @@ from kivy.uix.button import Button
 from kivy.uix.image import Image
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.behaviors import ButtonBehavior
 from kivy_garden.drag_n_drop import *
 from kivy.graphics import *
 from kivy.metrics import sp
 from kivy.clock import Clock, mainthread
 from kivy.core.window import Window
 from kivy.core.image import Image as CoreImage
-from PIL import Image as PILImage
 from kivy.core.window import Window, Keyboard
 import os
 import threading
@@ -330,7 +328,7 @@ class ThumbnailView(Screen):
             for drive in range(ord('A'), ord('Z')):
                 entry = chr(drive) + ':'
                 if os.path.exists(entry):
-                    folders.append((entry + '/', entry))            
+                    folders.append((entry + '\\', entry))            
         else:
             with os.scandir(path) as scandir:
                 for entry in scandir:

@@ -11,7 +11,6 @@ Config.set('kivy', 'exit_on_escape', 0)
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, NoTransition
 from kivy.core.window import Window
-from kivy.clock import mainthread
 
 from models.data import Data
 

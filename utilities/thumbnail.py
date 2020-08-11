@@ -1,5 +1,4 @@
 from kivy.app import App
-from kivy.clock import Clock
 from PIL import Image
 from ffpyplayer.player import MediaPlayer
 from ffpyplayer.pic import SWScale
@@ -58,8 +57,12 @@ class Thumbnail():
     options = {'paused': True, 'vf': ['select=gte(t\,' + str(position) + ')'], 'an': True, 'fast': True}
     player = MediaPlayer(self.mediaFile.path, ff_opts=options)    
 
+    count = 0
     while player.get_metadata()['duration'] == None:            
         time.sleep(0.01)
+        count += 1
+        if count > 200:
+          raise TypeError('Invalid Video: ' + self.mediaFile.path)
         
     metadata = player.get_metadata()    
     duration = metadata['duration']    

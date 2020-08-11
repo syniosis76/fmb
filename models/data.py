@@ -1,4 +1,3 @@
-from datetime import datetime
 import os
 import json
 from kivy.metrics import sp
@@ -14,7 +13,7 @@ class Data():
   currentFile = None  
   version = 0
   imageTypes = ['.jpg', '.png', '.jpeg', '.bmp', '.gif', '.pcx']
-  videoTypes = ['.avi', '.mov', '.mp4', '.mpeg4', '.mts', '.mpg', '.mpeg', '.vob', '.mkv']
+  videoTypes = ['.avi', '.mov', '.mp4', '.mpeg4', '.mts', '.mpg', '.mpeg', '.vob', '.mkv', '.flv']
   allTypes = imageTypes + videoTypes
   folderSettingsFileName = '.fmb'
   cellWidth = sp(160)
