@@ -21,7 +21,7 @@ class Thumbnail():
 
   def initialiseThumbnail(self):
     if not os.path.exists(self.thumbnailPath):
-      self.createThumbnailFile()
+      self.createThumbnailFile()    
   
   def createThumbnailFile(self):
     # Ensure Working folder exists:

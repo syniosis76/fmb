@@ -12,9 +12,13 @@ from kivy.clock import Clock, mainthread
 from kivy.core.window import Window
 from kivy.core.image import Image as CoreImage
 from kivy.core.window import Window, Keyboard
+
+from send2trash import send2trash
+
 import os
 import threading
-from send2trash import send2trash
+import traceback
+import asyncio
 
 from models.folder import Folder
 from utilities.thumbnail import Thumbnail
@@ -52,13 +56,16 @@ class ThumbnailView(Screen):
     currentIndex = None
     currentImage = None
     currentFile = None
-    folder = Folder()    
+    folder = Folder()
+    cancel_thread = None
+    thread = None
 
     def __init__(self, **kwargs):        
         super(ThumbnailView, self).__init__(**kwargs)                   
         self.app = App.get_running_app()
         self.data = self.app.data        
         self.version = 0
+        self.cancel_thread = threading.Event()        
         Window.bind(on_resize=self.on_window_resize)
         Window.bind(on_key_up=self.on_key_up)
         Window.bind(on_key_down=self.on_key_down)
@@ -81,9 +88,22 @@ class ThumbnailView(Screen):
         self.showFolders()
     
     def showThumbnails(self):
+        if self.thread and not self.cancel_thread.is_set():
+            print('Thread Cancel')
+            self.cancel_thread.set()
+            print('Thread Wait')
+            self.thread.join() # Wait for completion.
+            print('Thread Complete')
+            self.thread = None
+
+        Clock.schedule_once(lambda dt: self.showThumbnailsSchedule())        
+
+    def showThumbnailsSchedule(self):
         thumbnailGrid = self.ids.thumbnailGrid
         thumbnailGrid.clear_widgets()
-        threading.Thread(target=self.showThumbnailsThread).start()
+        self.cancel_thread.clear()              
+        self.thread = threading.Thread(target=self.showThumbnailsThread)        
+        self.thread.start()
 
     def showThumbnailsThread(self):   
         self.version = self.data.version
@@ -111,7 +131,11 @@ class ThumbnailView(Screen):
         self.folder.sortByModified()
     
         for file in self.folder.files:
+            if self.cancel_thread.is_set():
+                print('Exit Thread on Cancel')
+                break
             if self.app.closing:
+                print('Exit Thread on Close')
                 break                    
             thumbnail = Thumbnail(file)
             thumbnail.initialiseThumbnail()
@@ -119,10 +143,13 @@ class ThumbnailView(Screen):
             coreImage = CoreImage(thumbnail.thumbnailPath)
             self.addThumbnail(thumbnailGrid, file, coreImage)
 
-        self.version = self.data.version                                           
+        self.version = self.data.version     
+
+        self.cancel_thread.clear()
 
     @mainthread               
-    def addThumbnail(self, thumbnailGrid, mediaFile, coreImage):        
+    def addThumbnail(self, thumbnailGrid, mediaFile, coreImage):                        
+        print('Adding:', mediaFile.name)
         thumbnailWidget = ThumbnailWidget()
         thumbnailWidget.drag_cls = 'thumbnailLayout'        
         thumbnailWidget.bind(on_touch_down = self.thumbnailTouchDown)        
@@ -143,6 +170,10 @@ class ThumbnailView(Screen):
             self.currentIndex = self.currentIndex + 1
 
         self.updateThumbnailGridSize(Window.width)
+
+        return mediaFile.name
+
+        #print('Adding Complete:', mediaFile.name)      
 
     def showSelected(self, object):
         if object:
@@ -254,9 +285,6 @@ class ThumbnailView(Screen):
     def deleteThread(self, file):        
         os.remove(file.thumbnailPath)
         send2trash(file.path)
-
-    def openRootFolderClick(self):
-        filechooser.choose_dir(on_selection=self.onSelectRootFolder)
 
     def openHomeFolderClick(self):
         self.data.rootFolder = ''

@@ -13,7 +13,7 @@ class Data():
   currentFile = None  
   version = 0
   imageTypes = ['.jpg', '.png', '.jpeg', '.bmp', '.gif', '.pcx']
-  videoTypes = ['.avi', '.mov', '.mp4', '.mpeg4', '.mts', '.mpg', '.mpeg', '.vob', '.mkv', '.flv']
+  videoTypes = ['.avi', '.mov', '.mp4', '.mpeg4', '.mts', '.mpg', '.mpeg', '.vob', '.mkv', '.flv', '.wmv']
   allTypes = imageTypes + videoTypes
   folderSettingsFileName = '.fmb'
   cellWidth = sp(160)
