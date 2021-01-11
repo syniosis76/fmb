@@ -12,6 +12,8 @@ import os
 import time
 import traceback
 
+from utilities import video_frame
+
 Builder.load_file('views/imageView.kv')
 
 def sizeCallback(obj, value):
@@ -188,6 +190,30 @@ class ImageView(Screen):
                 finally:
                     ffplayer.set_pause(True)
 
+    def video_extract_frame(self):
+        if self.currentVideo:
+            video = self.currentVideo
+            if video.state == 'pause':
+                ff_video = video._video
+                frame = ff_video._next_frame
+                image = video_frame.get_frame_image(frame[0])
+
+                path = self.app.thumbnailView.currentFile.path
+
+                parts = os.path.splitext(path)
+                extension = parts[1].lower()
+
+                suffixNumber = 1
+                while (True):
+                    frame_path = parts[0] + ' ' + str(suffixNumber) + '.jpg'
+                    if not os.path.exists(frame_path):
+                        break
+                    suffixNumber = suffixNumber + 1
+
+                image.save(frame_path, format='jpeg')
+                self.app.thumbnailView.insertThumbnail(frame_path)
+
+
     def onPositionChange(self, instance, value):
         pass #print('The position in the video is', value)
 
@@ -219,8 +245,10 @@ class ImageView(Screen):
                 self.videoSeekBySeconds(10)
             elif keycode in [Keyboard.keycodes[';'], Keyboard.keycodes['numpad7']]:
                 self.videoSeekBySeconds(-1)
-            elif keycode in [Keyboard.keycodes['\''], Keyboard.keycodes['numpad9']]:
+            elif keycode in [Keyboard.keycodes['\''], Keyboard.keycodes['numpad9']]:            
                 self.videoNextFrame()
+            elif keycode in [Keyboard.keycodes['f']]:
+                self.video_extract_frame()
     
     def on_key_up(self, window, keycode, text):
         if self.manager.current == self.name:

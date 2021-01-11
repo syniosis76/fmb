@@ -2,3 +2,4 @@
 /views/__pycache__
 /models/__pycache__
 /utilities/__pycache__
+*.log

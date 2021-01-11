@@ -1,3 +1,4 @@
+import logging
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
@@ -17,10 +18,9 @@ from send2trash import send2trash
 
 import os
 import threading
-import traceback
-import asyncio
 
 from models.folder import Folder
+from models.mediafile import MediaFile
 from utilities.thumbnail import Thumbnail
 
 drag_controller = DraggableController()
@@ -89,11 +89,11 @@ class ThumbnailView(Screen):
     
     def showThumbnails(self):
         if self.thread and not self.cancel_thread.is_set():
-            print('Thread Cancel')
+            logging.info('Thread Cancel')
             self.cancel_thread.set()
-            print('Thread Wait')
+            logging.info('Thread Wait')
             self.thread.join() # Wait for completion.
-            print('Thread Complete')
+            logging.info('Thread Complete')
             self.thread = None
 
         Clock.schedule_once(lambda dt: self.showThumbnailsSchedule())        
@@ -106,7 +106,7 @@ class ThumbnailView(Screen):
         self.thread.start()
 
     def showThumbnailsThread(self):   
-        self.version = self.data.version
+        self.version = self.data.version        
         
         folderBox = self.ids.folderBox
         folderBox.width = sp(self.data.foldersWidth)
@@ -132,24 +132,24 @@ class ThumbnailView(Screen):
     
         for file in self.folder.files:
             if self.cancel_thread.is_set():
-                print('Exit Thread on Cancel')
+                logging.info('Exit Thread on Cancel')
                 break
             if self.app.closing:
-                print('Exit Thread on Close')
+                logging.info('Exit Thread on Close')
                 break                    
             thumbnail = Thumbnail(file)
             thumbnail.initialiseThumbnail()
             file.thumbnailPath = thumbnail.thumbnailPath
             coreImage = CoreImage(thumbnail.thumbnailPath)
-            self.addThumbnail(thumbnailGrid, file, coreImage)
+            self.addThumbnail(thumbnailGrid, file, coreImage, None)
 
         self.version = self.data.version     
 
         self.cancel_thread.clear()
 
     @mainthread               
-    def addThumbnail(self, thumbnailGrid, mediaFile, coreImage):                        
-        print('Adding:', mediaFile.name)
+    def addThumbnail(self, thumbnailGrid, mediaFile, coreImage, index):                        
+        logging.info('Thumbnail - ' + mediaFile.name)
         thumbnailWidget = ThumbnailWidget()
         thumbnailWidget.drag_cls = 'thumbnailLayout'        
         thumbnailWidget.bind(on_touch_down = self.thumbnailTouchDown)        
@@ -164,7 +164,10 @@ class ThumbnailView(Screen):
         thumbnailImage.bind(pos = self.thumbnailPosChanged)
 
         thumbnailWidget.add_widget(thumbnailImage)
-        thumbnailGrid.add_widget(thumbnailWidget)
+        if index == None:
+            thumbnailGrid.add_widget(thumbnailWidget)
+        else:
+            thumbnailGrid.add_widget(thumbnailWidget, index)
 
         if self.currentIndex:
             self.currentIndex = self.currentIndex + 1
@@ -173,7 +176,18 @@ class ThumbnailView(Screen):
 
         return mediaFile.name
 
-        #print('Adding Complete:', mediaFile.name)      
+        #logging.info('Adding Complete:', mediaFile.name)
+
+    def insertThumbnail(self, frame_path):
+        thumbnailGrid = self.ids.thumbnailGrid
+        
+        file = MediaFile(frame_path)
+        thumbnail = Thumbnail(file)
+        thumbnail.initialiseThumbnail()
+        file.thumbnailPath = thumbnail.thumbnailPath
+        coreImage = CoreImage(thumbnail.thumbnailPath)
+        self.addThumbnail(thumbnailGrid, file, coreImage, self.currentIndex)
+      
 
     def showSelected(self, object):
         if object:
@@ -312,7 +326,7 @@ class ThumbnailView(Screen):
 
     def on_key_down(self, window, keycode, text, modifiers, x):
         if self.manager.current == self.name:
-            #print('ThumbnailView Key Down: ' + str(keycode))
+            #logging.info('ThumbnailView Key Down: ' + str(keycode))
             if keycode == Keyboard.keycodes['right']:
                 self.selectImage(-1)
             elif keycode == Keyboard.keycodes['left']:
@@ -327,7 +341,7 @@ class ThumbnailView(Screen):
     
     def on_key_up(self, window, keycode, text):
         if self.manager.current == self.name:
-            pass #print('ThumbnailView Key Up: ' + str(keycode))
+            pass #logging.info('ThumbnailView Key Up: ' + str(keycode))
 
     def showFolders(self):
         folderGrid = self.ids.folderGrid

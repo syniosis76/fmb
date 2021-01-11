@@ -1,3 +1,5 @@
+import utilities.loghandler
+
 import os
 os.environ['KIVY_WINDOW'] = 'sdl2'
 os.environ['KIVY_VIDEO'] = 'ffpyplayer'
@@ -34,7 +36,7 @@ class FmbApp(App):
         self.screenManager.add_widget(self.thumbnailView)
         self.screenManager.add_widget(self.imageView)
 
-        return self.screenManager
+        return self.screenManager        
 
     def on_stop(self):
         self.closing = True

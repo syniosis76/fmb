@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import traceback
+from utilities import video_frame
 
 class Thumbnail():
   app = None
@@ -32,10 +33,10 @@ class Thumbnail():
         image = Image.open(self.mediaFile.path)
       else:
         try:          
-          image, duration = self.getVideoFrame(3) # Get Frame at 3 seconds
+          image, duration = video_frame.get_video_frame(self.mediaFile.path, 3) # Get Frame at 3 seconds
           if image == None:
             # The video is too short. Try again
-            image, duration = self.getVideoFrame(duration / 2)
+            image, duration = video_frame.get_video_frame(self.mediaFile.path, duration / 2)
         except:
           traceback.print_exc()
           image = None
@@ -52,41 +53,3 @@ class Thumbnail():
       image = Image.new(mode='RGBA',size=(int(self.data.thumbnailWidth), int(self.data.thumbnailHeight)),color=(128,0,0,128))       
     
     image.save(self.thumbnailPath, format='png') 
-  
-  def getVideoFrame(self, position):
-    options = {'paused': True, 'vf': ['select=gte(t\,' + str(position) + ')'], 'an': True, 'fast': True}
-    player = MediaPlayer(self.mediaFile.path, ff_opts=options)    
-
-    count = 0
-    while player.get_metadata()['duration'] == None:            
-        time.sleep(0.01)
-        count += 1
-        if count > 200:
-          raise TypeError('Invalid Video: ' + self.mediaFile.path)
-        
-    metadata = player.get_metadata()    
-    duration = metadata['duration']    
-
-    if duration >= position:        
-        player.set_size(500,-1)
-        
-        frame = None    
-        while not frame:
-            frame = player.get_frame(force_refresh=True)[0]
-            if not frame:
-              time.sleep(0.01)
-        
-        player.close_player()
-        if frame:
-            frame = frame[0]
-            frame_size = frame.get_size()
-            width = frame_size[0]
-            height = frame_size[1]
-            frame_converter = SWScale(width, height, frame.get_pixel_format(), ofmt='rgb24')
-            new_frame = frame_converter.scale(frame)
-            image_data = bytes(new_frame.to_bytearray()[0])
-
-            image = Image.frombuffer(mode='RGB', size=(width, height), data=image_data, decoder_name='raw')
-            return image, duration
-
-    return None, duration
