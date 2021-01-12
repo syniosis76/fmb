@@ -7,6 +7,7 @@ import sys
 import time
 import traceback
 from utilities import video_frame
+from utilities import exifhandler
 
 class Thumbnail():
   app = None
@@ -42,6 +43,7 @@ class Thumbnail():
           image = None
                 
       image.thumbnail((self.data.thumbnailWidth, self.data.thumbnailHeight))
+      image = exifhandler.rotate_image(image)
 
       if self.mediaFile.extension in self.app.data.videoTypes:
         if self.data.videoThumbnailOverlay == None:

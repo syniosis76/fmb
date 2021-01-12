@@ -335,6 +335,10 @@ class ThumbnailView(Screen):
                 self.selectImage(-self.columns)
             elif keycode == Keyboard.keycodes['up']:
                 self.selectImage(self.columns)
+            elif keycode in [Keyboard.keycodes['home']]:
+                self.selectImage(1000000) # Big number will stop at the first image (highest index).
+            elif keycode in [Keyboard.keycodes['end']]:
+                self.selectImage(-1000000) # Big negative number will stop at the last image (0 index).
             elif keycode == Keyboard.keycodes['enter']:
                 self.manager.transition.direction = 'left'
                 self.manager.current = 'ImageView'   

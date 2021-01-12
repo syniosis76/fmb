@@ -13,6 +13,7 @@ import time
 import traceback
 
 from utilities import video_frame
+from utilities import exifhandler
 
 Builder.load_file('views/imageView.kv')
 
@@ -62,14 +63,21 @@ class ImageView(Screen):
         #startTime = time.process_time() 
 
         pilImage = PILImage.open(path)        
-        width, height = pilImage.size
+
+        orientation = exifhandler.get_orientation(pilImage)
+
+        if orientation in (6, 8):
+            height, width = pilImage.size
+        else:
+            width, height = pilImage.size
+
         ratio = width / height
 
         displayWidth = imageGrid.size[0]
         displayHeight = imageGrid.size[1]
         displayRatio = displayWidth / displayHeight
 
-        if ratio <= displayRatio:
+        if ratio > displayRatio:
             newWidth = int(displayWidth)
             newHeight = int(displayWidth / ratio)
         else:
@@ -77,10 +85,9 @@ class ImageView(Screen):
             newWidth = int(displayHeight * ratio)            
         
         pilImage.draft("RGB", (newWidth, newHeight))
+        #pilImage.resize((newWidth, newHeight), PILImage.BICUBIC)
 
-        #print('Draft', pilImage.size)
-        #pilImage = pilImage.resize((newWidth, newHeight))
-        #print('Resize', pilImage.size)     
+        pilImage = exifhandler.rotate_image(pilImage)
 
         pilImage = pilImage.convert('RGBA')
         bytes = pilImage.tobytes()        
@@ -234,6 +241,10 @@ class ImageView(Screen):
                 self.selectImage(1)
             elif keycode in [Keyboard.keycodes['right'], Keyboard.keycodes['numpad6']]:                
                 self.selectImage(-1)
+            elif keycode in [Keyboard.keycodes['home']]:
+                self.selectImage(1000000) # Big number will stop at the first image (highest index).
+            elif keycode in [Keyboard.keycodes['end']]:
+                self.selectImage(-1000000) # Big negative number will stop at the last image (0 index).
             elif keycode in [Keyboard.keycodes['delete'], Keyboard.keycodes['numpaddecimal']]:
                 self.delete()
             # Video Controls
