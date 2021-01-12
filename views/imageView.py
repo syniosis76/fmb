@@ -192,19 +192,19 @@ class ImageView(Screen):
             video = self.currentVideo
             if video.state == 'pause':
                 ffVideo = video._video
-                ffplayer = ffVideo._ffplayer
+                ffplayer = ffVideo._ffplayer                
                 ffplayer.set_pause(False)
                 try:                                    
                     frame = None
                     while not frame:
                         frame, value = ffplayer.get_frame()
                         if not frame:
-                            time.sleep(0.001)
+                            time.sleep(0.005)
                         if value in ('paused', 'eof'):
                             break
-                    if frame:
+                    if frame:                        
                         ffVideo._next_frame = frame
-                        ffVideo._redraw()
+                        ffVideo._trigger()
                 finally:
                     ffplayer.set_pause(True)
 
