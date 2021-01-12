@@ -1,3 +1,4 @@
+from ffpyplayer import player
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
@@ -10,7 +11,7 @@ from PIL import Image as PILImage
 
 import os
 import time
-import traceback
+import logging
 
 from utilities import video_frame
 from utilities import exifhandler
@@ -123,9 +124,8 @@ class ImageView(Screen):
 
         try:    
             video.source = path
-        except:
-            print('Video Error:', path)
-            traceback.print_exc()
+        except Exception as e:
+            logging.exception('Error Playing Video - %S', e)
 
         video.state = 'play'
 
@@ -157,11 +157,14 @@ class ImageView(Screen):
 
     def videoPlayPause(self):
         if self.currentVideo:
-            video = self.currentVideo
+            video = self.currentVideo            
             if video.state == 'play':
-                video.state = 'pause'
-            else:
-                video.state = 'play'            
+                newstate = 'pause'                
+            else:                
+                newstate = 'play'
+            
+            logging.info('Play/Pause ' + video.state + ' to ' + newstate)
+            video.state = newstate
     
     def delete(self):
         self.app.thumbnailView.delete()
@@ -173,7 +176,15 @@ class ImageView(Screen):
             duration = video.duration
             position = video.position
             newPosition = position + seconds
-            newPositionPercent = newPosition / duration
+
+            if newPosition <= duration:
+                newPositionPercent = newPosition / duration
+            else:
+                newPositionPercent = 1   
+
+            if video.state in ('stop'):
+                video.state = 'play'
+
             video.seek(newPositionPercent, precise = False)
 
     def videoNextFrame(self):

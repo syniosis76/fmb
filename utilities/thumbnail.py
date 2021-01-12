@@ -41,9 +41,9 @@ class Thumbnail():
         except:
           traceback.print_exc()
           image = None
-                
-      image.thumbnail((self.data.thumbnailWidth, self.data.thumbnailHeight))
-      image = exifhandler.rotate_image(image)
+
+      image = exifhandler.rotate_image(image)          
+      image.thumbnail((self.data.thumbnailWidth, self.data.thumbnailHeight))      
 
       if self.mediaFile.extension in self.app.data.videoTypes:
         if self.data.videoThumbnailOverlay == None:
