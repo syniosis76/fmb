@@ -7,11 +7,12 @@ for index in ExifTags.TAGS.keys():
     break
 
 def get_orientation(image):
-  if orientation_index > -1:
-    if hasattr(image, '_getexif'):
+  if orientation_index > -1: 
+    try:
       exif = image._getexif()
-      if exif:
-        return exif.get(orientation_index, 0)
+      return exif.get(orientation_index, 0)    
+    except:
+      return 0
 
   return 0
 
