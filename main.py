@@ -19,6 +19,9 @@ from models.data import Data
 from views.thumbnailView import ThumbnailView
 from views.imageView import ImageView
 
+#from kivy.logger import Logger, LOG_LEVELS
+#Logger.setLevel(LOG_LEVELS["debug"])
+
 class FmbApp(App):
     closing = False
     thumbnailView = None

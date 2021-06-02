@@ -3,3 +3,4 @@
 /models/__pycache__
 /utilities/__pycache__
 *.log
+/widgets/__pycache__

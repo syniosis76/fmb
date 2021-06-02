@@ -7,14 +7,16 @@
 			id: imageGrid
 			cols: 1
 			size_hint_y: 1.0			
-		#GridLayout:
-		#	cols: 2
-		#	size_hint_y: None
-		#	height: '30sp'
-		#	Button:
-		#		text: 'Back'
-		#		size_hint_x: None
-		#		width: '60sp'
-		#		on_press: root.backButtonClick(self)
-		#	BoxLayout:
-		#		#spacer
+	GridLayout:
+		id: overlay
+		cols: 2
+		padding: 6					
+		size_hint_y: 1.0					
+		opacity: 0
+		ImageButton:			
+			id: backButton
+			size_hint_x: None	
+			width: '30sp'
+			size_hint_y: None
+			height: '30sp'
+			source: 'images\\arrow-left.png'		

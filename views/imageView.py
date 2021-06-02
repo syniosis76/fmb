@@ -7,6 +7,8 @@ from kivy.graphics.texture import Texture
 from kivy.uix.image import Image
 from kivy.uix.video import Video
 from kivy.core.window import Window, Keyboard
+from kivy.animation import Animation
+from kivy.clock import Clock
 from PIL import Image as PILImage
 
 import os
@@ -15,6 +17,7 @@ import logging
 
 from utilities import video_frame
 from utilities import exifhandler
+from widgets import imagebutton
 
 Builder.load_file('views/imageView.kv')
 
@@ -33,7 +36,12 @@ class ImageView(Screen):
         self.data = self.app.data
         Window.bind(on_resize=self.on_window_resize)
         Window.bind(on_key_up=self.on_key_up)
-        Window.bind(on_key_down=self.on_key_down)                
+        Window.bind(on_key_down=self.on_key_down)
+        Window.bind(mouse_pos=self.on_mouse_pos)
+
+        self.fadeInAnimation = Animation(opacity=0.8, duration=0.5)               
+        self.fadeOutAnimation = Animation(opacity=0, duration=1)
+        self.fadeOutTrigger = Clock.create_trigger(self.onFadeOutTrigger, timeout=5, interval=False, release_ref=False)
 
     def on_window_resize(self, window, width, height):
         if self.currentVideo == None:
@@ -41,6 +49,7 @@ class ImageView(Screen):
 
     def on_enter(self):        
         self.loadMedia()
+        self.fadeInOverlay()
 
     def loadMedia(self):
         if self.app.thumbnailView.currentFile:
@@ -127,7 +136,7 @@ class ImageView(Screen):
         except Exception as e:
             logging.exception('Error Playing Video - %S', e)
 
-        video.state = 'play'
+        video.state = 'play'    
 
     def clearImageWidget(self):
         imageGrid = self.ids.imageGrid
@@ -238,9 +247,41 @@ class ImageView(Screen):
     def onDurationChange(self, instance, value):
         print('The duration of the video is', value)
 
-    def backButtonClick(self, instance):
-        print('Back button clicked.')        
-        self.goToThumbnailView()
+    def on_mouse_pos(self, *args):
+        self.fadeInOverlay()
+
+    def on_touch_down(self, touch):
+        self.fadeInOverlay()    
+    
+    def on_touch_up(self, touch):
+        touch.push()
+        try:
+            touch.apply_transform_2d(self.to_local)
+            
+            if self.ids.backButton.collide_point(*touch.pos):
+                self.goToThumbnailView()
+                
+                return True
+        finally:
+            touch.pop()       
+    
+    def fadeOutOverlay(self):        
+        if self.ids.overlay.opacity > 0 and not self.fadeOutAnimation.have_properties_to_animate(self.ids.overlay):            
+            self.fadeInAnimation.cancel(self.ids.overlay)
+            self.fadeOutAnimation.start(self.ids.overlay)
+    
+    def fadeInOverlay(self):
+        self.startOverlayTimeout()
+        if self.ids.overlay.opacity < 0.8 and not self.fadeInAnimation.have_properties_to_animate(self.ids.overlay):            
+            self.fadeOutAnimation.cancel(self.ids.overlay)
+            self.fadeInAnimation.start(self.ids.overlay)
+
+    def startOverlayTimeout(self):
+        self.fadeOutTrigger.cancel()
+        self.fadeOutTrigger()
+
+    def onFadeOutTrigger(self, *args):
+        self.fadeOutOverlay()  
 
     def on_key_down(self, window, keycode, text, modifiers, x):        
         if self.manager.current == self.name:
