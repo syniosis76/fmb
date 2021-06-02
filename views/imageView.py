@@ -39,9 +39,12 @@ class ImageView(Screen):
         Window.bind(on_key_down=self.on_key_down)
         Window.bind(mouse_pos=self.on_mouse_pos)
 
-        self.fadeInAnimation = Animation(opacity=0.8, duration=0.5)               
-        self.fadeOutAnimation = Animation(opacity=0, duration=1)
-        self.fadeOutTrigger = Clock.create_trigger(self.onFadeOutTrigger, timeout=5, interval=False, release_ref=False)
+        fadeInDuration = 0.5
+        fadeOutDuration = 1.0
+        fadeTimoutDuration = 3.0
+        self.fadeInAnimation = Animation(opacity=0.8, duration=fadeInDuration)               
+        self.fadeOutAnimation = Animation(opacity=0, duration=fadeOutDuration)
+        self.fadeOutTrigger = Clock.create_trigger(self.onFadeOutTrigger, timeout=fadeTimoutDuration, interval=False, release_ref=False)
 
     def on_window_resize(self, window, width, height):
         if self.currentVideo == None:
@@ -161,8 +164,8 @@ class ImageView(Screen):
         self.manager.current = 'ThumbnailView'
 
     def selectImage(self, offset):        
-        self.app.thumbnailView.selectImage(offset)
-        self.loadMedia()
+        if self.app.thumbnailView.selectImage(offset):
+            self.loadMedia()
 
     def videoPlayPause(self):
         if self.currentVideo:
@@ -245,7 +248,27 @@ class ImageView(Screen):
         pass #print('The position in the video is', value)
 
     def onDurationChange(self, instance, value):
-        print('The duration of the video is', value)
+        print('The duration of the video is', value)       
+    
+    def fadeOutOverlay(self):        
+        if self.ids.overlay.opacity > 0 and not self.fadeOutAnimation.have_properties_to_animate(self.ids.overlay):            
+            self.fadeInAnimation.cancel(self.ids.overlay)
+            self.fadeOutAnimation.start(self.ids.overlay)
+            Window.show_cursor = False
+    
+    def fadeInOverlay(self):
+        self.startOverlayTimeout()
+        if self.ids.overlay.opacity < 0.8 and not self.fadeInAnimation.have_properties_to_animate(self.ids.overlay):            
+            self.fadeOutAnimation.cancel(self.ids.overlay)
+            self.fadeInAnimation.start(self.ids.overlay)
+            Window.show_cursor = True
+
+    def startOverlayTimeout(self):
+        self.fadeOutTrigger.cancel()
+        self.fadeOutTrigger()
+
+    def onFadeOutTrigger(self, *args):
+        self.fadeOutOverlay()
 
     def on_mouse_pos(self, *args):
         self.fadeInOverlay()
@@ -258,30 +281,16 @@ class ImageView(Screen):
         try:
             touch.apply_transform_2d(self.to_local)
             
-            if self.ids.backButton.collide_point(*touch.pos):
+            if self.ids.backButton.collide_point(*touch.pos):                
                 self.goToThumbnailView()
+            elif self.ids.previousButton.collide_point(*touch.pos):
+                self.selectImage(1)
+            elif self.ids.nextButton.collide_point(*touch.pos):
+                self.selectImage(-1)
                 
                 return True
         finally:
-            touch.pop()       
-    
-    def fadeOutOverlay(self):        
-        if self.ids.overlay.opacity > 0 and not self.fadeOutAnimation.have_properties_to_animate(self.ids.overlay):            
-            self.fadeInAnimation.cancel(self.ids.overlay)
-            self.fadeOutAnimation.start(self.ids.overlay)
-    
-    def fadeInOverlay(self):
-        self.startOverlayTimeout()
-        if self.ids.overlay.opacity < 0.8 and not self.fadeInAnimation.have_properties_to_animate(self.ids.overlay):            
-            self.fadeOutAnimation.cancel(self.ids.overlay)
-            self.fadeInAnimation.start(self.ids.overlay)
-
-    def startOverlayTimeout(self):
-        self.fadeOutTrigger.cancel()
-        self.fadeOutTrigger()
-
-    def onFadeOutTrigger(self, *args):
-        self.fadeOutOverlay()  
+            touch.pop()    
 
     def on_key_down(self, window, keycode, text, modifiers, x):        
         if self.manager.current == self.name:

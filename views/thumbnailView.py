@@ -260,9 +260,7 @@ class ThumbnailView(Screen):
 
                     return True
 
-    def selectImage(self, offset):
-        self.hideSelected(self.currentImage)
-        
+    def selectImage(self, offset):                
         thumbnailGrid = self.ids.thumbnailGrid
 
         if len(thumbnailGrid.children) == 0:
@@ -278,13 +276,20 @@ class ThumbnailView(Screen):
             elif newIndex > len(thumbnailGrid.children) - 1:
                 newIndex = len(thumbnailGrid.children) - 1
 
-            self.currentIndex = newIndex
-            thumbnailWidget = thumbnailGrid.children[newIndex]                        
-            image = thumbnailWidget.children[0]
-            self.currentImage = image
-            self.currentFile = image.mediaFile
+            if self.currentImage == None or self.currentIndex != newIndex:
+                self.hideSelected(self.currentImage)
 
-            self.showSelected(image)
+                self.currentIndex = newIndex
+                thumbnailWidget = thumbnailGrid.children[newIndex]                        
+                image = thumbnailWidget.children[0]
+                self.currentImage = image
+                self.currentFile = image.mediaFile
+
+                self.showSelected(image)
+
+                return True
+
+        return False
 
     def delete(self):
         if self.currentImage:

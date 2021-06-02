@@ -7,16 +7,26 @@
 			id: imageGrid
 			cols: 1
 			size_hint_y: 1.0			
-	GridLayout:
+	FloatLayout:
 		id: overlay
-		cols: 2
-		padding: 6					
-		size_hint_y: 1.0					
+		cols: 2				
+		size_hint: 1.0, 1.0					
 		opacity: 0
-		ImageButton:			
-			id: backButton
-			size_hint_x: None	
-			width: '30sp'
-			size_hint_y: None
-			height: '30sp'
+		Image:			
+			id: backButton			
+			pos: 6, root.height - 36
+			size_hint: None, None
+			size: '30sp', '30sp'
 			source: 'images\\arrow-left.png'		
+		Image:			
+			id: previousButton			
+			pos: root.width - 72, root.height - 36
+			size_hint: None, None
+			size: '30sp', '30sp'
+			source: 'images\\arrow-left.png'
+		Image:			
+			id: nextButton			
+			pos: root.width - 36, root.height - 36
+			size_hint: None, None
+			size: '30sp', '30sp'
+			source: 'images\\arrow-right.png'
