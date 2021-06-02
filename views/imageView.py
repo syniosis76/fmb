@@ -24,6 +24,10 @@ Builder.load_file('views/imageView.kv')
 def sizeCallback(obj, value):
     obj.text_size = (value[0] - sp(30), sp(20))
 
+class FmbVideo(Video):
+    def texture_update(self, *largs):
+        pass
+
 class ImageView(Screen):
     app = None
     data = None
@@ -126,7 +130,7 @@ class ImageView(Screen):
             self.clearImageWidget()         
             imageGrid = self.ids.imageGrid
         
-            video = Video()
+            video = FmbVideo()
             imageGrid.add_widget(video)       
             video.bind(position=self.onPositionChange)
             video.bind(duration=self.onDurationChange)
