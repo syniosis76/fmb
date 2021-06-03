@@ -43,6 +43,8 @@ class ImageView(Screen):
         Window.bind(on_key_down=self.on_key_down)
         Window.bind(mouse_pos=self.on_mouse_pos)
 
+        self.setupButtons()
+
         fadeInDuration = 0.5
         fadeOutDuration = 1.0
         fadeTimoutDuration = 3.0
@@ -171,6 +173,12 @@ class ImageView(Screen):
         if self.app.thumbnailView.selectImage(offset):
             self.loadMedia()
 
+    def previousImage(self):
+        self.selectImage(1)
+    
+    def nextImage(self):
+        self.selectImage(-1)
+
     def videoPlayPause(self):
         if self.currentVideo:
             video = self.currentVideo            
@@ -277,6 +285,11 @@ class ImageView(Screen):
     def on_mouse_pos(self, *args):
         self.fadeInOverlay()
 
+    def setupButtons(self):
+        self.buttons = [(self.ids.backButton, self.goToThumbnailView)
+            , (self.ids.previousButton, self.previousImage)
+            , (self.ids.nextButton, self.nextImage)]
+
     def on_touch_down(self, touch):
         self.fadeInOverlay()    
     
@@ -285,14 +298,10 @@ class ImageView(Screen):
         try:
             touch.apply_transform_2d(self.to_local)
             
-            if self.ids.backButton.collide_point(*touch.pos):                
-                self.goToThumbnailView()
-            elif self.ids.previousButton.collide_point(*touch.pos):
-                self.selectImage(1)
-            elif self.ids.nextButton.collide_point(*touch.pos):
-                self.selectImage(-1)
-                
-                return True
+            for (button, callback) in self.buttons:
+                if button.collide_point(*touch.pos):                
+                    callback()
+                    return True                            
         finally:
             touch.pop()    
 
