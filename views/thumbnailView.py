@@ -172,11 +172,11 @@ class ThumbnailView(Screen):
         if self.currentIndex:
             self.currentIndex = self.currentIndex + 1
 
-        self.updateThumbnailGridSize(Window.width)
+        self.updateThumbnailGridSize(Window.width)        
+
+        logging.info('Adding Complete - ' + mediaFile.name)
 
         return mediaFile.name
-
-        #logging.info('Adding Complete:', mediaFile.name)
 
     def insertThumbnail(self, frame_path):
         thumbnailGrid = self.ids.thumbnailGrid
@@ -346,7 +346,9 @@ class ThumbnailView(Screen):
                 self.selectImage(-1000000) # Big negative number will stop at the last image (0 index).
             elif keycode == Keyboard.keycodes['enter']:
                 self.manager.transition.direction = 'left'
-                self.manager.current = 'ImageView'   
+                self.manager.current = 'ImageView'
+            elif keycode == Keyboard.keycodes['f11']:
+                self.toggle_full_screen()
     
     def on_key_up(self, window, keycode, text):
         if self.manager.current == self.name:
@@ -421,5 +423,12 @@ class ThumbnailView(Screen):
             self.showRootFolder(widget.fmbPath)
         else:
             self.changePath(widget.fmbPath)
+
+    def toggle_full_screen(self):
+        if Window.fullscreen == False:
+            Window.fullscreen = 'auto'
+        else:
+            Window.fullscreen = False
+
 
 

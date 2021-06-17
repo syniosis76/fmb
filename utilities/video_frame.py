@@ -30,7 +30,7 @@ def get_video_frame(path, position):
   metadata = player.get_metadata()    
   duration = metadata['duration']    
 
-  if duration >= position:        
+  if duration >= position + 0.1: # Tolerance
       player.set_size(500,-1)
       
       frame = None    

@@ -334,7 +334,15 @@ class ImageView(Screen):
                 self.videoNextFrame()
             elif keycode in [Keyboard.keycodes['f']]:
                 self.video_extract_frame()
+            elif keycode == Keyboard.keycodes['f11']:
+                self.toggle_full_screen()
     
     def on_key_up(self, window, keycode, text):
         if self.manager.current == self.name:
             pass #print('ImagveView Key Up: ' + str(keycode))
+
+    def toggle_full_screen(self):
+        if Window.fullscreen == False:
+            Window.fullscreen = 'auto'
+        else:
+            Window.fullscreen = False
