@@ -18,11 +18,11 @@
           size: self.size      
       id: folderBox
       size_hint_x: None
-      width: '200sp'
+      width: 200
       GridLayout:
         cols: 2    
         size_hint_y: None
-        height: '30sp'
+        height: 30
         Button:
           text: 'Home'
           on_press: root.openHomeFolderClick()          
@@ -35,7 +35,7 @@
           size_hint_x: 1.0
           size_hint_y: 1.0
           do_scroll_x: False
-          scroll_wheel_distance: '30sp'
+          scroll_wheel_distance: 30
           scroll_type: ['bars']
           GridLayout:
             id: folderGrid
@@ -46,7 +46,7 @@
         size_hint_x: 1.0
         size_hint_y: 1.0
         do_scroll_x: False
-        scroll_wheel_distance: '90sp'
+        scroll_wheel_distance: 90
         scroll_type: ['bars']
         DraggableGridLayout:
           id: thumbnailGrid

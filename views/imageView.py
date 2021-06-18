@@ -74,6 +74,8 @@ class ImageView(Screen):
                     self.showVideo(path)                
           
     def showImage(self, path):
+        self.ids.videoControls.opacity = 0
+
         self.stopCurrentVideo()
         self.clearImageWidget()
 
@@ -144,6 +146,8 @@ class ImageView(Screen):
             video.source = path
         except Exception as e:
             logging.exception('Error Playing Video - %S', e)
+
+        self.ids.videoControls.opacity = 1
 
         video.state = 'play'    
 
@@ -257,7 +261,9 @@ class ImageView(Screen):
 
 
     def onPositionChange(self, instance, value):
-        pass #print('The position in the video is', value)
+        if self.currentVideo:
+            progress = self.ids.progress
+            progress.value = value /  self.currentVideo.duration * progress.max
 
     def onDurationChange(self, instance, value):
         print('The duration of the video is', value)       

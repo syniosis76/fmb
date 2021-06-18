@@ -16,17 +16,30 @@
 			id: backButton			
 			pos: 6, root.height - 36
 			size_hint: None, None
-			size: '30sp', '30sp'
-			source: 'images\\arrow-left.png'		
+			size: 30, 30
+			source: 'images\\arrow-left.png'
 		Image:			
 			id: previousButton			
 			pos: root.width - 72, root.height - 36
 			size_hint: None, None
-			size: '30sp', '30sp'
+			size: 30, 30
 			source: 'images\\arrow-left.png'
 		Image:			
 			id: nextButton			
 			pos: root.width - 36, root.height - 36
 			size_hint: None, None
-			size: '30sp', '30sp'
+			size: 30, 30
 			source: 'images\\arrow-right.png'
+		FloatLayout:
+			id: videoControls
+			cols: 2				
+			size_hint: 1.0, 0.2								
+			Slider:
+				id: progress
+				pos: 10, 10
+				size_hint: None, None
+				size: root.width - 20, 30
+				min: 0
+				max: 1000
+				step: 1
+				orientation: 'horizontal'			
