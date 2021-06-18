@@ -401,7 +401,7 @@ class ThumbnailView(Screen):
     @mainthread               
     def addFolder(self, foldersGrid, path, name):                
         button = Button()
-        button.text = name
+        button.text = name        
         button.fmbPath = path
         button.size_hint = (1, None)
         button.height = self.data.folderHeight

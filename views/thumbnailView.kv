@@ -1,9 +1,15 @@
 #:kivy 1.11.1
 
+<Button>:
+  background_normal: 'images\\button.png'
+  background_down: 'images\\button-down.png'
+  border: (2, 2, 2, 2)        
+
 <ThumbnailView>:
   BoxLayout:    
     BoxLayout:
       orientation: 'vertical'
+      padding: (0, 2, 2, 2)
       canvas:
         Color:
           rgba: 0.145, 0.145, 0.149, 1.0
@@ -14,7 +20,7 @@
       size_hint_x: None
       width: '200sp'
       GridLayout:
-        cols: 2     
+        cols: 2    
         size_hint_y: None
         height: '30sp'
         Button:
