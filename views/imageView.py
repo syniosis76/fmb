@@ -166,7 +166,9 @@ class ImageView(Screen):
         imageGrid = self.ids.imageGrid
         imageGrid.clear_widgets()
 
-    def goToThumbnailView(self):        
+    def goToThumbnailView(self):
+        Window.show_cursor = True
+
         self.stopCurrentVideo()
         self.clearImage()
 
@@ -269,7 +271,7 @@ class ImageView(Screen):
         print('The duration of the video is', value)       
     
     def fadeOutOverlay(self):        
-        if self.ids.overlay.opacity > 0 and not self.fadeOutAnimation.have_properties_to_animate(self.ids.overlay):            
+        if self.manager.current == 'ImageView' and self.ids.overlay.opacity > 0 and not self.fadeOutAnimation.have_properties_to_animate(self.ids.overlay):            
             self.fadeInAnimation.cancel(self.ids.overlay)
             self.fadeOutAnimation.start(self.ids.overlay)
             Window.show_cursor = False
@@ -303,11 +305,19 @@ class ImageView(Screen):
         touch.push()
         try:
             touch.apply_transform_2d(self.to_local)
-            
-            for (button, callback) in self.buttons:
-                if button.collide_point(*touch.pos):                
-                    callback()
-                    return True                            
+
+            progress = self.ids.progress
+            if self.currentVideo and progress.collide_point(*touch.pos):
+                touch.apply_transform_2d(progress.to_local)
+                position = touch.pos[0] / progress.width
+                self.currentVideo.seek(position, False)
+
+                return True
+            else:            
+                for (button, callback) in self.buttons:
+                    if button.collide_point(*touch.pos):                
+                        callback()
+                        return True                            
         finally:
             touch.pop()    
 
