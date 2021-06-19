@@ -174,7 +174,7 @@ class ThumbnailView(Screen):
 
         self.updateThumbnailGridSize(Window.width)        
 
-        logging.info('Adding Complete - ' + mediaFile.name)
+        #logging.info('Adding Complete - ' + mediaFile.name)
 
         return mediaFile.name
 

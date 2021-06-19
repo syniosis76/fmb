@@ -4,7 +4,7 @@
 	GridLayout:
 		cols: 1		
 		GridLayout:
-			id: imageGrid
+			id: image_grid
 			cols: 1
 			size_hint_y: 1.0			
 	FloatLayout:
@@ -13,33 +13,46 @@
 		size_hint: 1.0, 1.0					
 		opacity: 0
 		Image:			
-			id: backButton			
+			id: back_button			
 			pos: 6, root.height - 36
 			size_hint: None, None
 			size: 30, 30
 			source: 'images\\arrow-left.png'
 		Image:			
-			id: previousButton			
-			pos: root.width - 72, root.height - 36
+			id: previous_button			
+			pos: root.width - 108, root.height - 36
 			size_hint: None, None
 			size: 30, 30
 			source: 'images\\arrow-left.png'
 		Image:			
-			id: nextButton			
-			pos: root.width - 36, root.height - 36
+			id: next_button			
+			pos: root.width - 72, root.height - 36
 			size_hint: None, None
 			size: 30, 30
 			source: 'images\\arrow-right.png'
+		Image:			
+			id: full_screen_button			
+			pos: root.width - 36, root.height - 36
+			size_hint: None, None
+			size: 30, 30
+			source: 'images\\fullscreen.png'
 		FloatLayout:
-			id: videoControls
+			id: video_controls
+			opacity: 0
 			cols: 2				
 			size_hint: 1.0, 0.2								
 			Slider:
 				id: progress
-				pos: 10, 10
+				pos: 8, 8
 				size_hint: None, None
-				size: root.width - 20, 30
+				size: root.width - 50, 26
 				min: 0
 				max: 1000
 				step: 1
-				orientation: 'horizontal'			
+				orientation: 'horizontal'
+			Image:			
+				id: play_pause_button			
+				pos: root.width - 36, 6
+				size_hint: None, None
+				size: 30, 30
+				source: 'images\\play.png'	

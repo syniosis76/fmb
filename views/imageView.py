@@ -56,7 +56,7 @@ class ImageView(Screen):
         if self.currentVideo == None:
             self.loadMedia()
 
-    def on_enter(self):        
+    def on_enter(self):               
         self.loadMedia()
         self.fadeInOverlay()
 
@@ -74,12 +74,12 @@ class ImageView(Screen):
                     self.showVideo(path)                
           
     def showImage(self, path):
-        self.ids.videoControls.opacity = 0
+        self.ids.video_controls.opacity = 0
 
         self.stopCurrentVideo()
         self.clearImageWidget()
 
-        imageGrid = self.ids.imageGrid
+        image_grid = self.ids.image_grid
 
         #startTime = time.process_time() 
 
@@ -94,8 +94,8 @@ class ImageView(Screen):
 
         ratio = width / height
 
-        displayWidth = imageGrid.size[0]
-        displayHeight = imageGrid.size[1]
+        displayWidth = image_grid.size[0]
+        displayHeight = image_grid.size[1]
         displayRatio = displayWidth / displayHeight
 
         if ratio > displayRatio:
@@ -123,7 +123,7 @@ class ImageView(Screen):
         #print(endTime - startTime)
 
         image.allow_stretch = True
-        imageGrid.add_widget(image)   
+        image_grid.add_widget(image)   
            
     def showVideo(self, path):
         self.stopCurrentVideo()
@@ -132,12 +132,13 @@ class ImageView(Screen):
             video = self.currentVideo
         else:
             self.clearImageWidget()         
-            imageGrid = self.ids.imageGrid
+            image_grid = self.ids.image_grid
         
             video = FmbVideo()
-            imageGrid.add_widget(video)       
-            video.bind(position=self.onPositionChange)
-            video.bind(duration=self.onDurationChange)
+            image_grid.add_widget(video)       
+            video.bind(position=self.on_position_change)
+            video.bind(duration=self.on_duration_change)
+            video.bind(state=self.on_state_change)
             video.allow_stretch = True
             self.currentVideo = video
             self.currentFrameRate = 30
@@ -147,13 +148,13 @@ class ImageView(Screen):
         except Exception as e:
             logging.exception('Error Playing Video - %S', e)
 
-        self.ids.videoControls.opacity = 1
+        self.ids.video_controls.opacity = 1
 
         video.state = 'play'    
 
     def clearImageWidget(self):
-        imageGrid = self.ids.imageGrid
-        imageGrid.clear_widgets()
+        image_grid = self.ids.image_grid
+        image_grid.clear_widgets()
         self.currentVideo = None
 
     def stopCurrentVideo(self):
@@ -163,8 +164,8 @@ class ImageView(Screen):
 
     def clearImage(self):
         self.currentVideo = None
-        imageGrid = self.ids.imageGrid
-        imageGrid.clear_widgets()
+        image_grid = self.ids.image_grid
+        image_grid.clear_widgets()
 
     def goToThumbnailView(self):
         Window.show_cursor = True
@@ -183,9 +184,9 @@ class ImageView(Screen):
         self.selectImage(1)
     
     def nextImage(self):
-        self.selectImage(-1)
+        self.selectImage(-1)    
 
-    def videoPlayPause(self):
+    def toggle_play_pause(self):
         if self.currentVideo:
             video = self.currentVideo            
             if video.state == 'play':
@@ -262,13 +263,20 @@ class ImageView(Screen):
                 self.app.thumbnailView.insertThumbnail(frame_path)
 
 
-    def onPositionChange(self, instance, value):
+    def on_position_change(self, instance, value):
         if self.currentVideo:
             progress = self.ids.progress
             progress.value = value /  self.currentVideo.duration * progress.max
 
-    def onDurationChange(self, instance, value):
-        print('The duration of the video is', value)       
+    def on_duration_change(self, instance, value):
+        pass #print('The duration of the video is', value)       
+
+    def on_state_change(self, instance, value):
+        if self.currentVideo and value == 'play':
+            self.ids.play_pause_button.source = 'images\\pause.png'
+        else:
+            self.ids.play_pause_button.source = 'images\\play.png'
+            
     
     def fadeOutOverlay(self):        
         if self.manager.current == 'ImageView' and self.ids.overlay.opacity > 0 and not self.fadeOutAnimation.have_properties_to_animate(self.ids.overlay):            
@@ -294,9 +302,11 @@ class ImageView(Screen):
         self.fadeInOverlay()
 
     def setupButtons(self):
-        self.buttons = [(self.ids.backButton, self.goToThumbnailView)
-            , (self.ids.previousButton, self.previousImage)
-            , (self.ids.nextButton, self.nextImage)]
+        self.buttons = [(self.ids.back_button, self.goToThumbnailView)
+            , (self.ids.previous_button, self.previousImage)
+            , (self.ids.next_button, self.nextImage)
+            , (self.ids.full_screen_button, self.toggle_full_screen)
+            , (self.ids.play_pause_button, self.toggle_play_pause)]
 
     def on_touch_down(self, touch):
         self.fadeInOverlay()    
@@ -310,7 +320,7 @@ class ImageView(Screen):
             if self.currentVideo and progress.collide_point(*touch.pos):
                 touch.apply_transform_2d(progress.to_local)
                 position = touch.pos[0] / progress.width
-                self.currentVideo.seek(position, False)
+                self.seek_to_position(position)                
 
                 return True
             else:            
@@ -339,7 +349,7 @@ class ImageView(Screen):
                 self.delete()
             # Video Controls
             elif keycode in [Keyboard.keycodes['spacebar'], Keyboard.keycodes['p'], Keyboard.keycodes['numpad2']]:
-                self.videoPlayPause()
+                self.toggle_play_pause()
             elif keycode in [Keyboard.keycodes[','], Keyboard.keycodes['numpad1']]:
                 self.videoSeekBySeconds(-5)
             elif keycode in [Keyboard.keycodes['.'], Keyboard.keycodes['numpad3']]:
@@ -360,5 +370,14 @@ class ImageView(Screen):
     def toggle_full_screen(self):
         if Window.fullscreen == False:
             Window.fullscreen = 'auto'
+            self.ids.full_screen_button.source = 'images\\fullscreen-exit.png'
         else:
             Window.fullscreen = False
+            self.ids.full_screen_button.source = 'images\\fullscreen.png'
+    
+    def seek_to_position(self, position):
+        if self.currentVideo:            
+            if self.currentVideo.state not in ['play', 'pause']:
+                self.toggle_play_pause()
+            self.currentVideo.seek(position, False)
+        
