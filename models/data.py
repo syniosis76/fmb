@@ -54,9 +54,12 @@ class Data():
       json.dump(data, filehandle)
 
   @property
-
   def currentWorkingFolder(self):
     return os.path.join(self.currentFolder, '.fmb')
+
+  @property
+  def settings_file_name(self):
+    return os.path.join(self.currentWorkingFolder, 'fmb.json') 
 
   def updateVersion(self):
     self.version += 1

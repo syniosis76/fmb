@@ -18,6 +18,7 @@ from send2trash import send2trash
 
 import os
 import threading
+import json
 
 from models.folder import Folder
 from models.mediafile import MediaFile
@@ -26,14 +27,22 @@ from utilities.thumbnail import Thumbnail
 drag_controller = DraggableController()
 
 class DraggableGridLayout(DraggableLayoutBehavior, GridLayout):
+    def __init__(self, **kwargs):
+        super(DraggableGridLayout, self).__init__(**kwargs)
+        self.register_event_type('on_drag_complete')
+
     def compare_pos_to_widget(self, widget, pos):
         return 'before' if pos[0] < widget.center_x else 'after'
 
     def handle_drag_release(self, index, drag_widget):
         self.remove_widget(drag_widget)
         self.add_widget(drag_widget, index)
+        self.dispatch('on_drag_complete')     
 
     def get_drop_insertion_index_move(self, x, y):
+        pass
+
+    def on_drag_complete(self):
         pass
     
 class ThumbnailImage(Image):
@@ -69,6 +78,7 @@ class ThumbnailView(Screen):
         Window.bind(on_resize=self.on_window_resize)
         Window.bind(on_key_up=self.on_key_up)
         Window.bind(on_key_down=self.on_key_down)
+        self.save_layout_trigger = Clock.create_trigger(self.on_save_layout_trigger, timeout=5, interval=False, release_ref=False)      
 
     def on_enter(self):        
         if self.data.hasUpdated(self.version):      
@@ -143,9 +153,11 @@ class ThumbnailView(Screen):
             coreImage = CoreImage(thumbnail.thumbnailPath)
             self.addThumbnail(thumbnailGrid, file, coreImage, None)
 
-        self.version = self.data.version     
+        self.version = self.data.version
 
-        self.cancel_thread.clear()
+        self.trigger_save_layout()
+
+        self.cancel_thread.clear()        
 
     @mainthread               
     def addThumbnail(self, thumbnailGrid, mediaFile, coreImage, index):                        
@@ -430,5 +442,35 @@ class ThumbnailView(Screen):
         else:
             Window.fullscreen = False
 
+    def on_drag_complete(self):
+        self.trigger_save_layout()
+
+    def trigger_save_layout(self):
+        self.save_layout_trigger.cancel()
+        self.save_layout_trigger()
+
+    def on_save_layout_trigger(self, *args):
+        threading.Thread(target=self.save_layout).start()
+
+    def save_layout(self):
+        files = []
+
+        thumbnailGrid = self.ids.thumbnailGrid
+        length = len(thumbnailGrid.children)
+
+        for index in range(length - 1, 0, -1):
+            widget = thumbnailGrid.children[index]
+            image = widget.children[0]
+            media_file = image.mediaFile
+            file_info = {}
+            file_info['name'] = media_file.name
+            files.append(file_info)
+
+        layout = {}
+        layout['version'] = 0.1
+        layout['files'] = files
+       
+        with open(self.data.settings_file_name, 'w') as file:
+            json.dump(layout, file)
 
 

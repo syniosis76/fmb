@@ -40,6 +40,8 @@
           GridLayout:
             id: folderGrid
             cols: 1
+            size_hint_x: 1.0
+            size_hint_y: None
     BoxLayout:      
       size_hint_x: 1
       ScrollView:        
@@ -52,5 +54,6 @@
           id: thumbnailGrid
           drag_classes: ['thumbnailLayout']
           cols: 1
+          on_drag_complete: root.on_drag_complete()
         
         
