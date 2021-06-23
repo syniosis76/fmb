@@ -137,6 +137,25 @@ class ThumbnailView(Screen):
 
         path = self.data.currentFolder
 
+        # First load from saved layout
+        layout = self.load_layout()
+        if layout:
+            for file in layout['files']:
+                if self.cancel_thread.is_set():
+                    logging.info('Exit Thread on Cancel')
+                    break
+                if self.app.closing:
+                    logging.info('Exit Thread on Close')
+                    break
+                mediaFile = MediaFile(os.path.join(path, file['name']))
+                mediaFile.readModified()                    
+                thumbnail = Thumbnail(mediaFile)
+                thumbnail.initialiseThumbnail()
+                mediaFile.thumbnailPath = thumbnail.thumbnailPath
+                coreImage = CoreImage(thumbnail.thumbnailPath)
+                self.addThumbnail(thumbnailGrid, mediaFile, coreImage, None)
+
+        # Load any new files from disk
         self.folder.loadPath(path)
         self.folder.sortByModified()
     
@@ -146,18 +165,32 @@ class ThumbnailView(Screen):
                 break
             if self.app.closing:
                 logging.info('Exit Thread on Close')
-                break                    
-            thumbnail = Thumbnail(file)
-            thumbnail.initialiseThumbnail()
-            file.thumbnailPath = thumbnail.thumbnailPath
-            coreImage = CoreImage(thumbnail.thumbnailPath)
-            self.addThumbnail(thumbnailGrid, file, coreImage, None)
+                break
+            if not self.thumbnail_exists(file.name):
+                thumbnail = Thumbnail(file)
+                thumbnail.initialiseThumbnail()
+                file.thumbnailPath = thumbnail.thumbnailPath
+                coreImage = CoreImage(thumbnail.thumbnailPath)
+                self.addThumbnail(thumbnailGrid, file, coreImage, None)
 
         self.version = self.data.version
 
         self.trigger_save_layout()
 
-        self.cancel_thread.clear()        
+        self.cancel_thread.clear()
+
+    def thumbnail_exists(self, file_name):
+        thumbnailGrid = self.ids.thumbnailGrid
+        length = len(thumbnailGrid.children)
+
+        for widget in thumbnailGrid.children:
+            image = widget.children[0]
+            media_file = image.mediaFile
+            if media_file.name == file_name:
+                return True
+
+        return False
+
 
     @mainthread               
     def addThumbnail(self, thumbnailGrid, mediaFile, coreImage, index):                        
@@ -458,7 +491,7 @@ class ThumbnailView(Screen):
         thumbnailGrid = self.ids.thumbnailGrid
         length = len(thumbnailGrid.children)
 
-        for index in range(length - 1, 0, -1):
+        for index in range(length - 1, -1, -1):
             widget = thumbnailGrid.children[index]
             image = widget.children[0]
             media_file = image.mediaFile
@@ -472,5 +505,11 @@ class ThumbnailView(Screen):
        
         with open(self.data.settings_file_name, 'w') as file:
             json.dump(layout, file)
+
+    def load_layout(self):
+        if os.path.exists(self.data.settings_file_name):
+            with open(self.data.settings_file_name, 'r') as file:
+                return json.load(file)
+        return None
 
 
