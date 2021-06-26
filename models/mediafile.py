@@ -21,7 +21,11 @@ class MediaFile():
 
   def readModified(self):
     if os.path.exists(self.path):
-        self.modified = os.path.getmtime(self.path)  
+        self.modified = os.path.getmtime(self.path)
+
+  @property
+  def exists(self):
+    return os.path.exists(self.path)
 
   @staticmethod
   def getExtension(path):

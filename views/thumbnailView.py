@@ -116,7 +116,9 @@ class ThumbnailView(Screen):
         self.thread.start()
 
     def showThumbnailsThread(self):   
-        self.version = self.data.version        
+        self.version = self.data.version    
+
+        added_files = []    
         
         folderBox = self.ids.folderBox
         folderBox.width = sp(self.data.foldersWidth)
@@ -146,14 +148,16 @@ class ThumbnailView(Screen):
                     break
                 if self.app.closing:
                     logging.info('Exit Thread on Close')
-                    break
+                    break                
                 mediaFile = MediaFile(os.path.join(path, file['name']))
-                mediaFile.readModified()                    
-                thumbnail = Thumbnail(mediaFile)
-                thumbnail.initialiseThumbnail()
-                mediaFile.thumbnailPath = thumbnail.thumbnailPath
-                coreImage = CoreImage(thumbnail.thumbnailPath)
-                self.addThumbnail(thumbnailGrid, mediaFile, coreImage, None)
+                if mediaFile.exists and not mediaFile.name in added_files:
+                    added_files.append(mediaFile.name)
+                    mediaFile.readModified()                    
+                    thumbnail = Thumbnail(mediaFile)
+                    thumbnail.initialiseThumbnail()
+                    mediaFile.thumbnailPath = thumbnail.thumbnailPath
+                    coreImage = CoreImage(thumbnail.thumbnailPath)                    
+                    self.addThumbnail(thumbnailGrid, mediaFile, coreImage, None)
 
         # Load any new files from disk
         self.folder.loadPath(path)
@@ -166,7 +170,8 @@ class ThumbnailView(Screen):
             if self.app.closing:
                 logging.info('Exit Thread on Close')
                 break
-            if not self.thumbnail_exists(file.name):
+            if not file.name in added_files:
+                added_files.append(mediaFile.name)
                 thumbnail = Thumbnail(file)
                 thumbnail.initialiseThumbnail()
                 file.thumbnailPath = thumbnail.thumbnailPath

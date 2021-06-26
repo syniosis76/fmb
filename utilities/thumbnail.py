@@ -22,7 +22,7 @@ class Thumbnail():
     self.thumbnailPath = os.path.join(self.data.currentWorkingFolder, mediaFile.name + '.tn')
 
   def initialiseThumbnail(self):
-    if not os.path.exists(self.thumbnailPath):
+    if not os.path.exists(self.thumbnailPath) or self.media_date > self.thumbnail_date:
       self.createThumbnailFile()    
   
   def createThumbnailFile(self):
@@ -54,4 +54,18 @@ class Thumbnail():
       print(sys.exc_info()[0])
       image = Image.new(mode='RGBA',size=(int(self.data.thumbnailWidth), int(self.data.thumbnailHeight)),color=(128,0,0,128))       
     
-    image.save(self.thumbnailPath, format='png') 
+    image.save(self.thumbnailPath, format='png')
+
+  @property
+  def media_date(self):
+    if os.path.exists(self.mediaFile.path):
+      return os.path.getmtime(self.mediaFile.path) 
+    
+    return None
+
+  @property
+  def thumbnail_date(self):
+    if os.path.exists(self.mediaFile.path):
+      return os.path.getmtime(self.thumbnailPath) 
+    
+    return None
