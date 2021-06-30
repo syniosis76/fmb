@@ -21,9 +21,6 @@ from widgets import imagebutton
 
 Builder.load_file('views/imageView.kv')
 
-def sizeCallback(obj, value):
-    obj.text_size = (value[0] - sp(30), sp(20))
-
 class FmbVideo(Video):
     def texture_update(self, *largs):
         pass
@@ -38,9 +35,9 @@ class ImageView(Screen):
         super(ImageView, self).__init__(**kwargs) 
         self.app = App.get_running_app()
         self.data = self.app.data
-        Window.bind(on_resize=self.on_window_resize)
-        Window.bind(on_key_up=self.on_key_up)
+        Window.bind(on_resize=self.on_window_resize)        
         Window.bind(on_key_down=self.on_key_down)
+        Window.bind(on_key_up=self.on_key_up)
         Window.bind(mouse_pos=self.on_mouse_pos)
 
         self.setupButtons()
@@ -52,6 +49,7 @@ class ImageView(Screen):
         self.fadeOutAnimation = Animation(opacity=0, duration=fadeOutDuration)
         self.fadeOutTrigger = Clock.create_trigger(self.onFadeOutTrigger, timeout=fadeTimoutDuration, interval=False, release_ref=False)
 
+    # Reload the Image on resize to scale to fit.
     def on_window_resize(self, window, width, height):
         if self.currentVideo == None:
             self.loadMedia()
@@ -75,6 +73,7 @@ class ImageView(Screen):
           
     def showImage(self, path):
         self.ids.video_controls.opacity = 0
+        self.ids.edit_button.opacity = 1
 
         self.stopCurrentVideo()
         self.clearImageWidget()
@@ -108,7 +107,7 @@ class ImageView(Screen):
         pilImage.draft("RGB", (newWidth, newHeight))
         #pilImage.resize((newWidth, newHeight), PILImage.BICUBIC)
 
-        pilImage = exifhandler.rotate_image(pilImage)
+        pilImage = exifhandler.auto_rotate_image(pilImage)
 
         pilImage = pilImage.convert('RGBA')
         bytes = pilImage.tobytes()        
@@ -122,7 +121,7 @@ class ImageView(Screen):
         #endTime = time.process_time()
         #print(endTime - startTime)
 
-        image.allow_stretch = True
+        #image.allow_stretch = True
         image_grid.add_widget(image)   
            
     def showVideo(self, path):
@@ -147,7 +146,8 @@ class ImageView(Screen):
             video.source = path
         except Exception as e:
             logging.exception('Error Playing Video - %S', e)
-
+        
+        self.ids.edit_button.opacity = 0
         self.ids.video_controls.opacity = 1
 
         video.state = 'play'    
@@ -176,15 +176,19 @@ class ImageView(Screen):
         self.manager.transition.direction = 'right'
         self.manager.current = 'ThumbnailView'
 
+        return True
+
     def selectImage(self, offset):        
         if self.app.thumbnailView.selectImage(offset):
             self.loadMedia()
 
     def previousImage(self):
         self.selectImage(1)
+        return True
     
     def nextImage(self):
         self.selectImage(-1)    
+        return True
 
     def toggle_play_pause(self):
         if self.currentVideo:
@@ -196,6 +200,24 @@ class ImageView(Screen):
             
             logging.info('Play/Pause ' + video.state + ' to ' + newstate)
             video.state = newstate
+
+            return True
+        
+        return False
+
+    def edit_image(self):
+        if not self.currentVideo:
+            Window.show_cursor = True
+
+            self.stopCurrentVideo()
+            self.clearImage()
+
+            self.manager.transition.direction = 'left'
+            self.manager.current = 'image_editor'
+
+            return True
+        
+        return False
     
     def delete(self):
         self.app.thumbnailView.delete()
@@ -306,7 +328,8 @@ class ImageView(Screen):
             , (self.ids.previous_button, self.previousImage)
             , (self.ids.next_button, self.nextImage)
             , (self.ids.full_screen_button, self.toggle_full_screen)
-            , (self.ids.play_pause_button, self.toggle_play_pause)]
+            , (self.ids.play_pause_button, self.toggle_play_pause)
+            , (self.ids.edit_button, self.edit_image)]
 
     def on_touch_down(self, touch):
         self.fadeInOverlay()    
@@ -326,10 +349,12 @@ class ImageView(Screen):
             else:            
                 for (button, callback) in self.buttons:
                     if button.collide_point(*touch.pos):                
-                        callback()
-                        return True                            
+                        if callback():
+                            return True                            
+                
+                return False
         finally:
-            touch.pop()    
+            touch.pop()      
 
     def on_key_down(self, window, keycode, text, modifiers, x):        
         if self.manager.current == self.name:
@@ -362,10 +387,15 @@ class ImageView(Screen):
                 self.video_extract_frame()
             elif keycode == Keyboard.keycodes['f11']:
                 self.toggle_full_screen()
+
+            return True
+        
+        return False
     
     def on_key_up(self, window, keycode, text):
-        if self.manager.current == self.name:
-            pass #print('ImagveView Key Up: ' + str(keycode))
+        pass
+        #if self.manager.current == self.name:
+        #    print('ImagveView Key Up: ' + str(keycode))
 
     def toggle_full_screen(self):
         if Window.fullscreen == False:
@@ -374,10 +404,16 @@ class ImageView(Screen):
         else:
             Window.fullscreen = False
             self.ids.full_screen_button.source = 'images\\fullscreen.png'
+        
+        return True
     
     def seek_to_position(self, position):
         if self.currentVideo:            
             if self.currentVideo.state not in ['play', 'pause']:
                 self.toggle_play_pause()
             self.currentVideo.seek(position, False)
+
+            return True
+        
+        return False
         

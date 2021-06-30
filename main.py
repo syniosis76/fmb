@@ -18,6 +18,7 @@ from models.data import Data
 
 from views.thumbnailView import ThumbnailView
 from views.imageView import ImageView
+from views.image_editor import image_editor
 
 #from kivy.logger import Logger, LOG_LEVELS
 #Logger.setLevel(LOG_LEVELS["debug"])
@@ -26,6 +27,7 @@ class FmbApp(App):
     closing = False
     thumbnailView = None
     imageView = None
+    image_editor = None
 
     def build(self):
         Window.clearcolor = (0.118, 0.118, 0.118, 1)
@@ -36,8 +38,10 @@ class FmbApp(App):
         self.screenManager.transition = NoTransition()
         self.thumbnailView = ThumbnailView(name='ThumbnailView')
         self.imageView = ImageView(name='ImageView')
+        self.image_editor = image_editor(name='image_editor')
         self.screenManager.add_widget(self.thumbnailView)
         self.screenManager.add_widget(self.imageView)
+        self.screenManager.add_widget(self.image_editor)
 
         return self.screenManager        
 

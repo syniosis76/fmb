@@ -42,7 +42,7 @@ class Thumbnail():
           traceback.print_exc()
           image = None
 
-      image = exifhandler.rotate_image(image)          
+      image = exifhandler.auto_rotate_image(image)          
       image.thumbnail((self.data.thumbnailWidth, self.data.thumbnailHeight))      
 
       if self.mediaFile.extension in self.app.data.videoTypes:

@@ -55,9 +55,6 @@ class ThumbnailWidget(DraggableObjectBehavior, FloatLayout):
 
 Builder.load_file('views/thumbnailView.kv')
 
-def sizeCallback(obj, value):
-    obj.text_size = (value[0] - sp(30), sp(20))
-
 class ThumbnailView(Screen):
     app = None
     data = None
@@ -171,7 +168,7 @@ class ThumbnailView(Screen):
                 logging.info('Exit Thread on Close')
                 break
             if not file.name in added_files:
-                added_files.append(mediaFile.name)
+                added_files.append(file.name)
                 thumbnail = Thumbnail(file)
                 thumbnail.initialiseThumbnail()
                 file.thumbnailPath = thumbnail.thumbnailPath

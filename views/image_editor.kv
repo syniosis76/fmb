@@ -1,0 +1,42 @@
+#:kivy 1.0
+
+<image_editor>:
+  BoxLayout:    
+    BoxLayout:      
+      size_hint_x: 1
+      size_hint_y: 1
+      padding: (10, 10, 10, 10)
+      BoxLayout:
+        id: image_editor_box      
+        size_hint_x: 1
+        size_hint_y: 1          
+    FloatLayout:
+      id: tools_box      
+      orientation: 'vertical'
+      size_hint_x: None      
+      width: 200
+      padding: (0, 2, 2, 2)
+      canvas:
+        Color:
+          rgba: 0.145, 0.145, 0.149, 1.0
+        Rectangle:
+          pos: self.pos
+          size: self.size
+      Button:            
+        id: rotate_left_button        
+        pos: root.width - 194, root.height - 30
+        size_hint: None, None
+        size: 24, 24
+        background_normal: 'images\\rotate-left.png'
+        background_down: 'images\\rotate-left.png'
+        border: (2, 2, 2, 2)
+        on_press: root.adjust_rotation(1)
+      Button:            
+        id: rotate_right_button        
+        pos: root.width - 170, root.height - 30
+        size_hint: None, None
+        size: 24, 24
+        background_normal: 'images\\rotate-right.png'
+        background_down: 'images\\rotate-right.png'
+        border: (2, 2, 2, 2)
+        on_press: root.adjust_rotation(-1)
