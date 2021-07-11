@@ -1,6 +1,5 @@
 #:kivy 1.0
-
-<image_editor>:
+<image_editor>:  
   BoxLayout:    
     BoxLayout:      
       size_hint_x: 1
@@ -10,7 +9,9 @@
         id: image_editor_box      
         size_hint_x: 1
         size_hint_y: 1          
-    FloatLayout:
+    FloatLayout:      
+      #:set button_spacing 20
+      #:set button_size 30
       id: tools_box      
       orientation: 'vertical'
       size_hint_x: None      
@@ -24,19 +25,73 @@
           size: self.size
       Button:            
         id: rotate_left_button        
-        pos: root.width - 194, root.height - 30
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 0), root.height - ((button_spacing + button_size) * 1)
         size_hint: None, None
-        size: 24, 24
+        size: button_size, button_size
         background_normal: 'images\\rotate-left.png'
         background_down: 'images\\rotate-left.png'
         border: (2, 2, 2, 2)
-        on_press: root.adjust_rotation(1)
+        on_press: root.adjust_rotation(-0.2)
+      Button:            
+        id: move_up_button        
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 1), root.height - ((button_spacing + button_size) * 1)
+        size_hint: None, None
+        size: button_size, button_size
+        background_normal: 'images\\arrow-up.png'
+        background_down: 'images\\arrow-up.png'
+        border: (2, 2, 2, 2)
+        on_press: root.adjust_position((0, -1))
       Button:            
         id: rotate_right_button        
-        pos: root.width - 170, root.height - 30
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 2), root.height - ((button_spacing + button_size) * 1)
         size_hint: None, None
-        size: 24, 24
+        size: button_size, button_size
         background_normal: 'images\\rotate-right.png'
         background_down: 'images\\rotate-right.png'
         border: (2, 2, 2, 2)
-        on_press: root.adjust_rotation(-1)
+        on_press: root.adjust_rotation(0.2)
+      Button:            
+        id: move_left_button        
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 0), root.height - ((button_spacing + button_size) * 2)
+        size_hint: None, None
+        size: button_size, button_size
+        background_normal: 'images\\arrow-left.png'
+        background_down: 'images\\arrow-left.png'
+        border: (2, 2, 2, 2)
+        on_press: root.adjust_position((-1, 0))
+      Button:            
+        id: move_right_button        
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 2), root.height - ((button_spacing + button_size) * 2)
+        size_hint: None, None
+        size: button_size, button_size
+        background_normal: 'images\\arrow-right.png'
+        background_down: 'images\\arrow-right.png'
+        border: (2, 2, 2, 2)
+        on_press: root.adjust_position((1, 0))
+      Button:            
+        id: zoom_in_button        
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 0), root.height - ((button_spacing + button_size) * 3)
+        size_hint: None, None
+        size: button_size, button_size
+        background_normal: 'images\\zoom-in.png'
+        background_down: 'images\\zoom-in.png'
+        border: (2, 2, 2, 2)
+        on_press: root.adjust_zoom(-0.01)
+      Button:            
+        id: move_down_button        
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 1), root.height - ((button_spacing + button_size) * 3)
+        size_hint: None, None
+        size: button_size, button_size
+        background_normal: 'images\\arrow-down.png'
+        background_down: 'images\\arrow-down.png'
+        border: (2, 2, 2, 2)
+        on_press: root.adjust_position((0, 1))
+      Button:            
+        id: zoom_out_button        
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 2), root.height - ((button_spacing + button_size) * 3)
+        size_hint: None, None
+        size: button_size, button_size
+        background_normal: 'images\\zoom-out.png'
+        background_down: 'images\\zoom-out.png'
+        border: (2, 2, 2, 2)
+        on_press: root.adjust_zoom(0.01)
