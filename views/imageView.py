@@ -17,7 +17,6 @@ import logging
 
 from utilities import video_frame
 from utilities import exifhandler
-from widgets import imagebutton
 
 Builder.load_file('views/imageView.kv')
 

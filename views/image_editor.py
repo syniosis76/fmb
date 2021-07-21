@@ -8,9 +8,11 @@ from kivy.core.window import Window, Keyboard
 from kivy.clock import Clock
 from PIL import Image as PILImage
 
-import math
+#read the image
 
+from models.edit_parameters import edit_parameters
 from utilities import exifhandler
+from utilities.transform_image import transform_image
 
 Builder.load_file('views/image_editor.kv')
 
@@ -18,9 +20,8 @@ class image_editor(Screen):
     app = None
     data = None
     base_image = None
-    position = 0, 0
-    rotation = 0
-    zoom = 1    
+    transformed_image = None
+    parameters = edit_parameters()    
 
     def __init__(self, **kwargs):
         super(image_editor, self).__init__(**kwargs) 
@@ -32,7 +33,7 @@ class image_editor(Screen):
     
     def on_enter(self):
         self.load_image()              
-        self.show_image()
+        self.show_image(True)
 
     def load_image(self):
         if self.app.thumbnailView.currentFile:
@@ -42,24 +43,30 @@ class image_editor(Screen):
             orientation = exifhandler.get_orientation(self.base_image)
             if orientation in (6, 8):
                 self.base_image = exifhandler.rotate_image(self.base_image, orientation)
+            self.transformed_image = None
 
-    def show_image(self):        
+    def show_image(self, transform):        
         if self.base_image:
-            self.clear_editor_image()            
+            self.clear_editor_image()
 
-            image = self.base_image.copy()                    
+            if transform or not self.transformed_image:
+                image = self.base_image.copy()                    
 
-            box_width, box_height = self.ids.image_editor_box.size
-            box_ratio = box_width / box_height
-            width, height = image.size
-            ratio = width / height
+                box_width, box_height = self.ids.image_editor_box.size
+                box_ratio = box_width / box_height
+                width, height = image.size
+                ratio = width / height
 
-            if box_ratio < ratio:
-                size = box_width, box_width / ratio
-            else:
-                size = box_height * ratio, box_height
+                if box_ratio < ratio:
+                    size = box_width, box_width / ratio
+                else:
+                    size = box_height * ratio, box_height
 
-            image = self.transform_image(image, size, self.position, self.rotation, self.zoom)          
+                self.transformed_image = transform_image.transform(image, size, self.parameters)            
+            
+            image = self.transformed_image
+            
+            image = transform_image.apply_adjustment(image, self.parameters)        
             
             image = image.convert('RGBA')
             bytes = image.tobytes()        
@@ -74,32 +81,11 @@ class image_editor(Screen):
 
     def clear_editor_image(self):             
         image_editor_box = self.ids.image_editor_box
-        image_editor_box.clear_widgets()
-
-    def transform_image(self, image, size, position, rotation, zoom):
-        size = int(size[0]), int(size[1])
-
-        angle = rotation / 180.0 * math.pi
-        x, y = image.size[0] / 2, image.size[1] / 2
-        nx, ny = size[0] / 2 + position[0], size[1] / 2 + position[1]
-
-        zoom = size[1] / image.size[1] * (1 / zoom)
-        sx, sy = zoom, zoom
-        
-        cosine = math.cos(angle)
-        sine = math.sin(angle)
-        a = cosine / sx
-        b = sine / sx
-        c = x - nx * a - ny * b
-        d = -sine / sy
-        e = cosine / sy
-        f = y - nx * d - ny * e
-
-        return image.transform(size, PILImage.AFFINE, (a,b,c,d,e,f), resample=PILImage.BICUBIC)    
+        image_editor_box.clear_widgets()    
 
     # Reload the Image on resize to scale to fit. 
     def on_window_resize(self, window, width, height):
-        Clock.schedule_once(lambda x: self.show_image(), 0.1)        
+        Clock.schedule_once(lambda x: self.show_image(True), 0.1)        
     
     def on_key_down(self, window, keycode, text, modifiers, x):        
         if self.manager.current == self.name:
@@ -124,15 +110,23 @@ class image_editor(Screen):
         self.manager.current = 'ImageView'
 
     def adjust_position(self, amount):
-        self.position = (self.position[0] + amount[0], self.position[1] + amount[1])
-        self.show_image()
+        self.parameters.position = (self.parameters.position[0] + amount[0], self.parameters.position[1] + amount[1])
+        self.show_image(True)
     
     def adjust_rotation(self, amount):
-        self.rotation += amount
-        self.show_image()
+        self.parameters.rotation += amount
+        self.show_image(True)
     
     def adjust_zoom(self, amount):
-        zoom = self.zoom + amount
+        zoom = self.parameters.zoom + amount
         if zoom <= 1:
-            self.zoom = zoom
-            self.show_image()
+            self.parameters.zoom = zoom
+            self.show_image(True)
+
+    def set_brightness(self, value):
+        self.parameters.brightness = value
+        self.show_image(False)
+
+    def set_contrast(self, value):
+        self.parameters.contrast = value
+        self.show_image(False)
