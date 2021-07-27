@@ -35,5 +35,8 @@ class transform_image():
         if parameters.contrast != 1:
             contrast_enhancer = ImageEnhance.Contrast(adjusted_image)            
             adjusted_image = contrast_enhancer.enhance(parameters.contrast)
+        if parameters.saturation != 1:
+            contrast_enhancer = ImageEnhance.Color(adjusted_image)
+            adjusted_image = contrast_enhancer.enhance(parameters.saturation)
         
         return adjusted_image

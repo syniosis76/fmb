@@ -130,3 +130,7 @@ class image_editor(Screen):
     def set_contrast(self, value):
         self.parameters.contrast = value
         self.show_image(False)
+
+    def set_saturation(self, value):
+        self.parameters.saturation = value
+        self.show_image(False)
