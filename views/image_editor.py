@@ -134,3 +134,7 @@ class image_editor(Screen):
     def set_saturation(self, value):
         self.parameters.saturation = value
         self.show_image(False)
+
+    def set_gamma(self, value):
+        self.parameters.gamma = value
+        self.show_image(False)

@@ -1,4 +1,5 @@
-from PIL import Image as PILImage, ImageEnhance
+from PIL import Image as PILImage, ImageEnhance, ImageFilter
+from pillow_lut import load_hald_image, rgb_color_enhance
 import math
 
 class transform_image():
@@ -25,18 +26,31 @@ class transform_image():
         return image.transform(size, PILImage.AFFINE, (a,b,c,d,e,f), resample=PILImage.BICUBIC)    
 
     @staticmethod
-    def apply_adjustment(image, parameters):
-        adjusted_image = image
+    def interpolate(x, values):
+        length = len(values)
 
-        #Brightness
-        if parameters.brightness != 1:
-            brightness_enhancer = ImageEnhance.Brightness(adjusted_image)            
-            adjusted_image = brightness_enhancer.enhance(parameters.brightness)
-        if parameters.contrast != 1:
-            contrast_enhancer = ImageEnhance.Contrast(adjusted_image)            
-            adjusted_image = contrast_enhancer.enhance(parameters.contrast)
-        if parameters.saturation != 1:
-            contrast_enhancer = ImageEnhance.Color(adjusted_image)
-            adjusted_image = contrast_enhancer.enhance(parameters.saturation)
+        for index in range(length - 1):
+            (x1, y1) = values[index]
+            (x2, y2) = values[index + 1]
+            if x <= x1: return y1
+            if x > x1 and x < x2:
+                factor = (y2 - y1) / (x2 - x1)                
+                return ((x - x1) * factor) + y1
         
-        return adjusted_image
+        return values[length - 1][1]
+
+    @staticmethod
+    def apply_adjustment(image, parameters):
+        adjusted_image = image        
+
+        exposure = transform_image.interpolate(parameters.brightness, [(-1, -5), (0, 0), (1, 5)])
+        contrast = transform_image.interpolate(parameters.contrast, [(-1, -1), (0, 0), (1, 5)])
+        saturation = transform_image.interpolate(parameters.saturation, [(-1, -1), (0, 0), (1, 5)])
+        gamma = transform_image.interpolate(parameters.gamma * -1, [(-1, 0), (0, 1), (1, 10)])
+        # warmth -1.0 to 1.0
+        # vibrance -1.0 to 5.0.
+        # hue 0.0 to 1.0
+
+        lut = rgb_color_enhance(5, exposure=exposure, contrast=contrast, saturation=saturation, gamma=gamma)        
+        return adjusted_image.filter(lut)
+    

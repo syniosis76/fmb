@@ -102,10 +102,10 @@
         size: self.parent.size[0] - (button_spacing * 2), button_size
         value_track_width: 1
         min: -100
-        max: 200
+        max: 100
         step: 1
         orientation: 'horizontal'
-        on_value: root.set_brightness((self.value / 100) + 1)      
+        on_value: root.set_brightness(self.value / 100)      
       Slider:
         id: contrast_slider
         pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * 4)
@@ -113,10 +113,10 @@
         size: self.parent.size[0] - (button_spacing * 2), button_size
         value_track_width: 1
         min: -100
-        max: 200
+        max: 100
         step: 1
         orientation: 'horizontal'
-        on_value: root.set_contrast((self.value / 100) + 1)
+        on_value: root.set_contrast(self.value / 100)
       Slider:
         id: saturation_slider
         pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * 5)
@@ -124,7 +124,18 @@
         size: self.parent.size[0] - (button_spacing * 2), button_size
         value_track_width: 1
         min: -100
-        max: 200
+        max: 100
         step: 1
         orientation: 'horizontal'
-        on_value: root.set_saturation((self.value / 100) + 1)
+        on_value: root.set_saturation(self.value / 100)
+      Slider:
+        id: gamma_slider
+        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * 6)
+        size_hint: None, None
+        size: self.parent.size[0] - (button_spacing * 2), button_size
+        value_track_width: 1
+        min: -100
+        max: 100
+        step: 1
+        orientation: 'horizontal'
+        on_value: root.set_gamma(self.value / 100)
