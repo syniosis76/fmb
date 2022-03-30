@@ -138,3 +138,24 @@ class image_editor(Screen):
     def set_gamma(self, value):
         self.parameters.gamma = value
         self.show_image(False)
+
+    def save(self):
+        if self.base_image:
+            image = self.base_image.copy()                    
+
+            # todo: Calculate Size
+            box_width, box_height = image.size[0] * self.parameters.zoom, image.size[1] * self.parameters.zoom
+            box_ratio = box_width / box_height
+            width, height = image.size
+            ratio = width / height
+
+            if box_ratio < ratio:
+                size = box_width, box_width / ratio
+            else:
+                size = box_height * ratio, box_height
+
+            image = transform_image.transform(image, size, self.parameters)                                                
+            image = transform_image.apply_adjustment(image, self.parameters)
+
+            image.save('D:\\tmp\image.jpg')
+

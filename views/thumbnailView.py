@@ -317,11 +317,11 @@ class ThumbnailView(Screen):
             else:
                 newIndex = self.currentIndex + offset           
 
-            return self.selectImage(newIndex, False)
+            return self.selectImage(newIndex)
 
         return False
 
-    def selectImage(self, newIndex, force):
+    def selectImage(self, newIndex, force=False):
         thumbnailGrid = self.ids.thumbnailGrid
 
         if newIndex < 0:

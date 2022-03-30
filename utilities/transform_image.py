@@ -6,10 +6,13 @@ class transform_image():
     @staticmethod
     def transform(image, size, parameters):
         size = int(size[0]), int(size[1])
+        max_size = max(size)
+        position_x = int(parameters.position[0] / 100 * max_size)
+        position_y = int(parameters.position[1] / 100 * max_size)
 
         angle = parameters.rotation / 180.0 * math.pi
         x, y = image.size[0] / 2, image.size[1] / 2
-        nx, ny = size[0] / 2 + parameters.position[0], size[1] / 2 + parameters.position[1]
+        nx, ny = (size[0] / 2) + position_x, (size[1] / 2) + position_y
 
         zoom = size[1] / image.size[1] * (1 / parameters.zoom)
         sx, sy = zoom, zoom

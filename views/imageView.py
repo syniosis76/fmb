@@ -177,16 +177,16 @@ class ImageView(Screen):
 
         return True
 
-    def selectImage(self, offset):        
-        if self.app.thumbnailView.selectImage(offset):
+    def changeImage(self, offset):        
+        if self.app.thumbnailView.changeImage(offset):
             self.loadMedia()
 
     def previousImage(self):
-        self.selectImage(1)
+        self.changeImage(1)
         return True
     
     def nextImage(self):
-        self.selectImage(-1)    
+        self.changeImage(-1)    
         return True
 
     def toggle_play_pause(self):
@@ -362,13 +362,13 @@ class ImageView(Screen):
             if keycode == Keyboard.keycodes['escape']:
                 self.goToThumbnailView()            
             elif keycode in [Keyboard.keycodes['left'], Keyboard.keycodes['numpad4']]:
-                self.selectImage(1)
+                self.changeImage(1)
             elif keycode in [Keyboard.keycodes['right'], Keyboard.keycodes['numpad6']]:                
-                self.selectImage(-1)
+                self.changeImage(-1)
             elif keycode in [Keyboard.keycodes['home']]:
-                self.selectImage(1000000) # Big number will stop at the first image (highest index).
+                self.changeImage(1000000) # Big number will stop at the first image (highest index).
             elif keycode in [Keyboard.keycodes['end']]:
-                self.selectImage(-1000000) # Big negative number will stop at the last image (0 index).
+                self.changeImage(-1000000) # Big negative number will stop at the last image (0 index).
             elif keycode in [Keyboard.keycodes['delete'], Keyboard.keycodes['numpaddecimal']]:
                 self.delete()
             # Video Controls
