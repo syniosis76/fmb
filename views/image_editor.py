@@ -124,20 +124,27 @@ class image_editor(Screen):
             self.show_image(True)
 
     def set_brightness(self, value):
-        self.parameters.brightness = value
+        self.parameters.brightness = self.power(value, 2)
         self.show_image(False)
 
-    def set_contrast(self, value):
-        self.parameters.contrast = value
+    def set_contrast(self, value):        
+        self.parameters.contrast = self.power(value, 5)
         self.show_image(False)
 
     def set_saturation(self, value):
-        self.parameters.saturation = value
+        self.parameters.saturation = self.power(value, 3)
         self.show_image(False)
 
     def set_gamma(self, value):
-        self.parameters.gamma = value
+        self.parameters.gamma = self.power(value, 2)
         self.show_image(False)
+
+    def power(self, value, exponent):      
+      result = pow(value, exponent)
+      if value < 0 and result > 0:
+          result = result * -1
+
+      return result
 
     def save(self):
         if self.base_image:
