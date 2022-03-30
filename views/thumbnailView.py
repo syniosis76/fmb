@@ -193,7 +193,6 @@ class ThumbnailView(Screen):
 
         return False
 
-
     @mainthread               
     def addThumbnail(self, thumbnailGrid, mediaFile, coreImage, index):                        
         logging.info('Thumbnail - ' + mediaFile.name)
@@ -307,7 +306,7 @@ class ThumbnailView(Screen):
 
                     return True
 
-    def selectImage(self, offset):                
+    def changeImage(self, offset):                
         thumbnailGrid = self.ids.thumbnailGrid
 
         if len(thumbnailGrid.children) == 0:
@@ -316,25 +315,32 @@ class ThumbnailView(Screen):
             if self.currentIndex == None:            
                 newIndex = 0
             else:
-                newIndex = self.currentIndex + offset
+                newIndex = self.currentIndex + offset           
 
-            if newIndex < 0:
-                newIndex = 0
-            elif newIndex > len(thumbnailGrid.children) - 1:
-                newIndex = len(thumbnailGrid.children) - 1
+            return self.selectImage(newIndex, False)
 
-            if self.currentImage == None or self.currentIndex != newIndex:
-                self.hideSelected(self.currentImage)
+        return False
 
-                self.currentIndex = newIndex
-                thumbnailWidget = thumbnailGrid.children[newIndex]                        
-                image = thumbnailWidget.children[0]
-                self.currentImage = image
-                self.currentFile = image.mediaFile
+    def selectImage(self, newIndex, force):
+        thumbnailGrid = self.ids.thumbnailGrid
 
-                self.showSelected(image)
+        if newIndex < 0:
+            newIndex = 0
+        elif newIndex > len(thumbnailGrid.children) - 1:
+            newIndex = len(thumbnailGrid.children) - 1
 
-                return True
+        if force or self.currentImage == None or self.currentIndex != newIndex:
+            self.hideSelected(self.currentImage)
+
+            self.currentIndex = newIndex
+            thumbnailWidget = thumbnailGrid.children[newIndex]                        
+            image = thumbnailWidget.children[0]
+            self.currentImage = image
+            self.currentFile = image.mediaFile
+
+            self.showSelected(image)
+
+            return True
 
         return False
 
@@ -345,7 +351,7 @@ class ThumbnailView(Screen):
             widget = self.currentImage.parent
             thumbnailGrid = self.ids.thumbnailGrid
             thumbnailGrid.remove_widget(widget)
-            self.selectImage(-1)
+            self.selectImage(self.currentIndex - 1, True) # Select the next image.
             threading.Thread(target=(lambda: self.deleteThread(file))).start()
     
     def deleteThread(self, file):        
@@ -380,20 +386,22 @@ class ThumbnailView(Screen):
         if self.manager.current == self.name:
             #logging.info('ThumbnailView Key Down: ' + str(keycode))
             if keycode == Keyboard.keycodes['right']:
-                self.selectImage(-1)
+                self.changeImage(-1)
             elif keycode == Keyboard.keycodes['left']:
-                self.selectImage(1)
+                self.changeImage(1)
             elif keycode == Keyboard.keycodes['down']:
-                self.selectImage(-self.columns)
+                self.changeImage(-self.columns)
             elif keycode == Keyboard.keycodes['up']:
-                self.selectImage(self.columns)
+                self.changeImage(self.columns)
             elif keycode in [Keyboard.keycodes['home']]:
-                self.selectImage(1000000) # Big number will stop at the first image (highest index).
+                self.changeImage(1000000) # Big number will stop at the first image (highest index).
             elif keycode in [Keyboard.keycodes['end']]:
-                self.selectImage(-1000000) # Big negative number will stop at the last image (0 index).
+                self.changeImage(-1000000) # Big negative number will stop at the last image (0 index).
             elif keycode == Keyboard.keycodes['enter']:
                 self.manager.transition.direction = 'left'
                 self.manager.current = 'ImageView'
+            elif keycode == Keyboard.keycodes['delete']:
+                self.delete()
             elif keycode == Keyboard.keycodes['f11']:
                 self.toggle_full_screen()
     
