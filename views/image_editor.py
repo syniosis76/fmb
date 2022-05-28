@@ -22,7 +22,8 @@ class image_editor(Screen):
     data = None
     base_image = None
     transformed_image = None
-    parameters = edit_parameters()    
+    parameters = None
+    previous_zoom = None
 
     def __init__(self, **kwargs):
         super(image_editor, self).__init__(**kwargs) 
@@ -36,6 +37,7 @@ class image_editor(Screen):
         self.fadeOutAnimation = Animation(opacity=0, duration=fadeOutDuration)
     
     def on_enter(self):
+        self.parameters = edit_parameters()
         self.load_image()              
         self.show_image(True)
 
@@ -120,7 +122,37 @@ class image_editor(Screen):
 
     def set_ratio(self, ratio):
         self.parameters.ratio = ratio
+
+        self.check_zoom()
+
         self.show_image(True)
+
+    def check_zoom(self):
+        if self.base_image:
+            print('Initial', self.parameters.zoom, self.previous_zoom)
+            max_zoom = self.parameters.zoom
+
+            image = self.base_image
+            image_ratio = image.size[0] / image.size[1]
+            
+            if self.parameters.ratio == None:
+                ratio = image_ratio
+            else:
+                ratio = self.parameters.ratio
+
+            if ratio > image_ratio:
+                max_zoom = image_ratio / ratio
+
+            if self.parameters.zoom > max_zoom:
+                if self.previous_zoom == None:
+                    self.previous_zoom = self.parameters.zoom
+                self.parameters.zoom = max_zoom
+                print('Zet Max', self.parameters.zoom, self.previous_zoom)
+            else:
+                if self.previous_zoom != None:
+                    self.parameters.zoom = self.previous_zoom
+                    self.previous_zoom = None
+                    self.check_zoom()
 
     def adjust_position(self, amount):
         self.parameters.position = (self.parameters.position[0] + amount[0], self.parameters.position[1] + amount[1])
@@ -131,6 +163,7 @@ class image_editor(Screen):
         self.show_image(True)
     
     def adjust_zoom(self, amount):
+        self.previous_zoom = None # Clear Previous Zoom if manually set.
         zoom = self.parameters.zoom + amount
         if zoom <= 1:
             self.parameters.zoom = zoom
@@ -172,10 +205,11 @@ class image_editor(Screen):
         if self.base_image:
             image = self.base_image.copy()                    
 
-            # todo: Calculate Size
+            # Todo: Calculate Size
             box_width, box_height = image.size[0] * self.parameters.zoom, image.size[1] * self.parameters.zoom
             box_ratio = box_width / box_height
             width, height = image.size
+
             if self.parameters.ratio == None:
                 ratio = width / height
             else:
