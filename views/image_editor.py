@@ -59,7 +59,10 @@ class image_editor(Screen):
                 box_width, box_height = self.ids.image_editor_box.size
                 box_ratio = box_width / box_height
                 width, height = image.size
-                ratio = width / height
+                if self.parameters.ratio == None:
+                    ratio = width / height
+                else:
+                    ratio = self.parameters.ratio
 
                 if box_ratio < ratio:
                     size = box_width, box_width / ratio
@@ -108,18 +111,16 @@ class image_editor(Screen):
         #    print('ImagveView Key Up: ' + str(keycode))
 
     def go_back(self):
-        self.clear_editor_image()
-
         self.app.imageView.no_back = True
+
+        self.clear_editor_image()        
 
         self.manager.transition.direction = 'right'
         self.manager.current = 'ImageView'
 
-        # Clock trigger to allow mouse up to process
-        Clock.schedule_once(lambda x: self.clear_no_back(), 1.01)
-
-    def clear_no_back(self):
-        self.app.imageView.no_back = False
+    def set_ratio(self, ratio):
+        self.parameters.ratio = ratio
+        self.show_image(True)
 
     def adjust_position(self, amount):
         self.parameters.position = (self.parameters.position[0] + amount[0], self.parameters.position[1] + amount[1])
@@ -175,7 +176,10 @@ class image_editor(Screen):
             box_width, box_height = image.size[0] * self.parameters.zoom, image.size[1] * self.parameters.zoom
             box_ratio = box_width / box_height
             width, height = image.size
-            ratio = width / height
+            if self.parameters.ratio == None:
+                ratio = width / height
+            else:
+                ratio = self.parameters.ratio
 
             if box_ratio < ratio:
                 size = box_width, box_width / ratio

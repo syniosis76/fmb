@@ -167,8 +167,10 @@ class ImageView(Screen):
         image_grid = self.ids.image_grid
         image_grid.clear_widgets()
 
-    def goToThumbnailView(self):
-        if self.no_back == False:
+    def go_back(self):
+        if self.no_back:
+            self.no_back = False
+        else:            
             Window.show_cursor = True
 
             self.stopCurrentVideo()
@@ -325,7 +327,7 @@ class ImageView(Screen):
         self.fadeInOverlay()
 
     def setupButtons(self):
-        self.buttons = [(self.ids.back_button, self.goToThumbnailView)
+        self.buttons = [(self.ids.back_button, self.go_back)
             , (self.ids.previous_button, self.previousImage)
             , (self.ids.next_button, self.nextImage)
             , (self.ids.full_screen_button, self.toggle_full_screen)
@@ -362,7 +364,7 @@ class ImageView(Screen):
             #print('ImageView Key Down: ' + str(keycode))
             # Navigation
             if keycode == Keyboard.keycodes['escape']:
-                self.goToThumbnailView()            
+                self.go_back()            
             elif keycode in [Keyboard.keycodes['left'], Keyboard.keycodes['numpad4']]:
                 self.changeImage(1)
             elif keycode in [Keyboard.keycodes['right'], Keyboard.keycodes['numpad6']]:                

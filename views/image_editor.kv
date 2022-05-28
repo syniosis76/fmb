@@ -13,8 +13,10 @@
       #:set button_spacing 8.333
       #:set button_size 30
       #:set position_loc 1
-      #:set transform_loc 3
-      #:set save_loc 7
+      #:set ratio_loc 3.5
+      #:set ratio_font_size '12sp'
+      #:set transform_loc 6
+      #:set save_loc 10.5
       id: tools_box      
       orientation: 'vertical'
       size_hint_x: None      
@@ -107,6 +109,64 @@
         background_down: 'images\\zoom-out.png'
         border: (2, 2, 2, 2)
         on_press: root.adjust_zoom(0.01)
+      
+      Button:            
+        id: ratio_current_button
+        text: 'Original'
+        font_size: ratio_font_size
+        pos: self.parent.pos[0] + button_spacing + (button_size / 2) + ((button_size + button_spacing) * 0), root.height - ((button_spacing + button_size) * (ratio_loc + 0))
+        size_hint: None, None
+        size: (button_size * 2) + button_spacing, button_size
+        on_press: root.set_ratio(None)
+      Button:            
+        id: ratio_current_button
+        text: '1:1'
+        font_size: ratio_font_size
+        pos: self.parent.pos[0] + button_spacing + (button_size / 2) + ((button_size + button_spacing) * 2), root.height - ((button_spacing + button_size) * (ratio_loc + 0))
+        size_hint: None, None
+        size: button_size, button_size              
+        on_press: root.set_ratio(1)
+      Button:            
+        id: ratio_16_9_button
+        text: '16:9'
+        font_size: ratio_font_size
+        pos: self.parent.pos[0] + button_spacing + (button_size / 2) + ((button_size + button_spacing) * 3), root.height - ((button_spacing + button_size) * (ratio_loc + 0))
+        size_hint: None, None
+        size: button_size, button_size        
+        on_press: root.set_ratio(16 / 9)       
+      Button:            
+        id: ratio_current_button
+        text: '2:3'
+        font_size: ratio_font_size
+        pos: self.parent.pos[0] + button_spacing + (button_size / 2) + ((button_size + button_spacing) * 0), root.height - ((button_spacing + button_size) * (ratio_loc + 1))
+        size_hint: None, None
+        size: button_size, button_size        
+        on_press: root.set_ratio(2 / 3)
+      Button:            
+        id: ratio_current_button
+        text: '4:5'
+        font_size: ratio_font_size
+        pos: self.parent.pos[0] + button_spacing + (button_size / 2) + ((button_size + button_spacing) * 1), root.height - ((button_spacing + button_size) * (ratio_loc + 1))
+        size_hint: None, None
+        size: button_size, button_size        
+        on_press: root.set_ratio(4 / 5)      
+      Button:            
+        id: ratio_current_button
+        text: '5:4'
+        font_size: ratio_font_size
+        pos: self.parent.pos[0] + button_spacing + (button_size / 2) + ((button_size + button_spacing) * 2), root.height - ((button_spacing + button_size) * (ratio_loc + 1))
+        size_hint: None, None
+        size: button_size, button_size        
+        on_press: root.set_ratio(5 / 4)
+      Button:            
+        id: ratio_current_button
+        text: '3:2'
+        font_size: ratio_font_size
+        pos: self.parent.pos[0] + button_spacing + (button_size / 2) + ((button_size + button_spacing) * 3), root.height - ((button_spacing + button_size) * (ratio_loc + 1))
+        size_hint: None, None
+        size: button_size, button_size        
+        on_press: root.set_ratio(3 / 2)
+      
       Slider:
         id: brightness_slider
         pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * (transform_loc + 0))
@@ -151,6 +211,7 @@
         step: 1
         orientation: 'horizontal'
         on_value: root.set_gamma(self.value / 100)
+      
       Button:
         id: save_button
         text: 'Save a copy'
