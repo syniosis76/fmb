@@ -12,6 +12,9 @@
     FloatLayout:      
       #:set button_spacing 8.333
       #:set button_size 30
+      #:set position_loc 1
+      #:set transform_loc 3
+      #:set save_loc 7
       id: tools_box      
       orientation: 'vertical'
       size_hint_x: None      
@@ -34,7 +37,7 @@
         on_press: root.go_back()
       Button:            
         id: rotate_left_button        
-        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 0), root.height - ((button_spacing + button_size) * 1)
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 0), root.height - ((button_spacing + button_size) * (position_loc + 0))
         size_hint: None, None
         size: button_size, button_size
         background_normal: 'images\\rotate-left.png'
@@ -43,7 +46,7 @@
         on_press: root.adjust_rotation(-0.2)        
       Button:            
         id: move_up_button        
-        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 1), root.height - ((button_spacing + button_size) * 1)
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 1), root.height - ((button_spacing + button_size) * (position_loc + 0))
         size_hint: None, None
         size: button_size, button_size
         background_normal: 'images\\arrow-up.png'
@@ -52,7 +55,7 @@
         on_press: root.adjust_position((0, -1))
       Button:            
         id: rotate_right_button        
-        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 2), root.height - ((button_spacing + button_size) * 1)
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 2), root.height - ((button_spacing + button_size) * (position_loc + 0))
         size_hint: None, None
         size: button_size, button_size
         background_normal: 'images\\rotate-right.png'
@@ -61,7 +64,7 @@
         on_press: root.adjust_rotation(0.2)      
       Button:            
         id: move_left_button        
-        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 0), root.height - ((button_spacing + button_size) * 2)
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 0), root.height - ((button_spacing + button_size) * (position_loc + 1))
         size_hint: None, None
         size: button_size, button_size
         background_normal: 'images\\arrow-left.png'
@@ -70,7 +73,7 @@
         on_press: root.adjust_position((-1, 0))
       Button:            
         id: move_down_button        
-        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 1), root.height - ((button_spacing + button_size) * 2)
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 1), root.height - ((button_spacing + button_size) * (position_loc + 1))
         size_hint: None, None
         size: button_size, button_size
         background_normal: 'images\\arrow-down.png'
@@ -79,7 +82,7 @@
         on_press: root.adjust_position((0, 1))
       Button:            
         id: move_right_button        
-        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 2), root.height - ((button_spacing + button_size) * 2)
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 2), root.height - ((button_spacing + button_size) * (position_loc + 1))
         size_hint: None, None
         size: button_size, button_size
         background_normal: 'images\\arrow-right.png'
@@ -88,7 +91,7 @@
         on_press: root.adjust_position((1, 0))
       Button:            
         id: zoom_in_button        
-        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 4), root.height - ((button_spacing + button_size) * 1)
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 4), root.height - ((button_spacing + button_size) * (position_loc + 0))
         size_hint: None, None
         size: button_size, button_size
         background_normal: 'images\\zoom-in.png'
@@ -97,7 +100,7 @@
         on_press: root.adjust_zoom(-0.01)            
       Button:            
         id: zoom_out_button        
-        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 4), root.height - ((button_spacing + button_size) * 2)
+        pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 4), root.height - ((button_spacing + button_size) * (position_loc + 1))
         size_hint: None, None
         size: button_size, button_size
         background_normal: 'images\\zoom-out.png'
@@ -106,7 +109,7 @@
         on_press: root.adjust_zoom(0.01)
       Slider:
         id: brightness_slider
-        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * 3)
+        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * (transform_loc + 0))
         size_hint: None, None
         size: self.parent.size[0] - (button_spacing * 2), button_size
         value_track_width: 1
@@ -117,7 +120,7 @@
         on_value: root.set_brightness(self.value / 100)      
       Slider:
         id: contrast_slider
-        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * 4)
+        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * (transform_loc + 1))
         size_hint: None, None
         size: self.parent.size[0] - (button_spacing * 2), button_size
         value_track_width: 1
@@ -128,7 +131,7 @@
         on_value: root.set_contrast(self.value / 100)
       Slider:
         id: saturation_slider
-        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * 5)
+        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * (transform_loc + 2))
         size_hint: None, None
         size: self.parent.size[0] - (button_spacing * 2), button_size
         value_track_width: 1
@@ -139,7 +142,7 @@
         on_value: root.set_saturation(self.value / 100)
       Slider:
         id: gamma_slider
-        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * 6)
+        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * (transform_loc + 3))
         size_hint: None, None
         size: self.parent.size[0] - (button_spacing * 2), button_size
         value_track_width: 1
@@ -150,8 +153,15 @@
         on_value: root.set_gamma(self.value / 100)
       Button:
         id: save_button
-        text: 'Save'
-        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * 7)
+        text: 'Save a copy'
+        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * (save_loc + 0))
         size_hint: None, None
         size: self.parent.size[0] - (button_spacing * 2), button_size
         on_press: root.save()
+      Label:
+        id: save_label
+        text: 'Saving...'
+        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * (save_loc + 0.8))
+        size_hint: None, None
+        size: self.parent.size[0] - (button_spacing * 2), button_size
+        opacity: 0

@@ -351,8 +351,9 @@ class ThumbnailView(Screen):
             widget = self.currentImage.parent
             thumbnailGrid = self.ids.thumbnailGrid
             thumbnailGrid.remove_widget(widget)
-            self.selectImage(self.currentIndex - 1, True) # Select the next image.
+            self.selectImage(self.currentIndex - 1, True) # Select the next image.            
             threading.Thread(target=(lambda: self.deleteThread(file))).start()
+            self.trigger_save_layout()        
     
     def deleteThread(self, file):        
         os.remove(file.thumbnailPath)

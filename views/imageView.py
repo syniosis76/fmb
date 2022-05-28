@@ -29,6 +29,7 @@ class ImageView(Screen):
     data = None
     currentVideo = None
     currentFrameRate = None
+    no_back = False
 
     def __init__(self, **kwargs):
         super(ImageView, self).__init__(**kwargs) 
@@ -167,13 +168,14 @@ class ImageView(Screen):
         image_grid.clear_widgets()
 
     def goToThumbnailView(self):
-        Window.show_cursor = True
+        if self.no_back == False:
+            Window.show_cursor = True
 
-        self.stopCurrentVideo()
-        self.clearImage()
+            self.stopCurrentVideo()
+            self.clearImage()
 
-        self.manager.transition.direction = 'right'
-        self.manager.current = 'ThumbnailView'
+            self.manager.transition.direction = 'right'
+            self.manager.current = 'ThumbnailView'
 
         return True
 

@@ -5,10 +5,11 @@ from kivy.metrics import sp
 from kivy.graphics.texture import Texture
 from kivy.uix.image import Image
 from kivy.core.window import Window, Keyboard
+from kivy.animation import Animation
 from kivy.clock import Clock
 from PIL import Image as PILImage
-
-#read the image
+import os
+import threading
 
 from models.edit_parameters import edit_parameters
 from utilities import exifhandler
@@ -30,6 +31,9 @@ class image_editor(Screen):
         Window.bind(on_resize=self.on_window_resize)
         Window.bind(on_key_down=self.on_key_down)
         Window.bind(on_key_up=self.on_key_up)
+
+        fadeOutDuration = 2.0        
+        self.fadeOutAnimation = Animation(opacity=0, duration=fadeOutDuration)
     
     def on_enter(self):
         self.load_image()              
@@ -106,8 +110,16 @@ class image_editor(Screen):
     def go_back(self):
         self.clear_editor_image()
 
-        self.manager.transition.direction = 'left'
+        self.app.imageView.no_back = True
+
+        self.manager.transition.direction = 'right'
         self.manager.current = 'ImageView'
+
+        # Clock trigger to allow mouse up to process
+        Clock.schedule_once(lambda x: self.clear_no_back(), 1.01)
+
+    def clear_no_back(self):
+        self.app.imageView.no_back = False
 
     def adjust_position(self, amount):
         self.parameters.position = (self.parameters.position[0] + amount[0], self.parameters.position[1] + amount[1])
@@ -148,6 +160,15 @@ class image_editor(Screen):
 
     def save(self):
         if self.base_image:
+            save_label = self.ids.save_label
+            save_label.opacity = 1
+            save_label.text = 'Saving...'
+
+            thread = threading.Thread(target=self.save_thread)        
+            thread.start()
+    
+    def save_thread(self):
+        if self.base_image:
             image = self.base_image.copy()                    
 
             # todo: Calculate Size
@@ -164,5 +185,23 @@ class image_editor(Screen):
             image = transform_image.transform(image, size, self.parameters)                                                
             image = transform_image.apply_adjustment(image, self.parameters)
 
-            image.save('D:\\tmp\image.jpg')
+            path = self.app.thumbnailView.currentFile.path
+            parts = os.path.splitext(path)
+            suffixNumber = 1
+            while (True):
+                frame_path = parts[0] + ' ' + str(suffixNumber) + '.jpg'
+                if not os.path.exists(frame_path):
+                    break
+                suffixNumber = suffixNumber + 1                       
+
+            image.save(frame_path)
+            self.app.thumbnailView.insertThumbnail(frame_path)
+            
+            save_label = self.ids.save_label
+            save_label.text = 'Saved'
+            self.fadeOutAnimation.start(self.ids.save_label)
+
+            self.app.thumbnailView.trigger_save_layout()
+
+            
 
