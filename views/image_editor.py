@@ -199,7 +199,7 @@ class image_editor(Screen):
             save_label.text = 'Saving...'
 
             thread = threading.Thread(target=self.save_thread)        
-            thread.start()
+            thread.start()        
     
     def save_thread(self):
         if self.base_image:

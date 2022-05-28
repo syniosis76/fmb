@@ -167,6 +167,13 @@
         size: button_size, button_size        
         on_press: root.set_ratio(3 / 2)
       
+      Label:
+        id: brightness_label
+        pos: self.parent.pos[0] + button_spacing + (button_size / 2), root.height - ((button_spacing + button_size) * (transform_loc + 0) - 18)
+        text: 'Brightness'
+        font_size: ratio_font_size
+        size_hint: None, None
+        text_size: self.size
       Slider:
         id: brightness_slider
         pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * (transform_loc + 0))
@@ -177,7 +184,14 @@
         max: 100
         step: 1
         orientation: 'horizontal'
-        on_value: root.set_brightness(self.value / 100)      
+        on_value: root.set_brightness(self.value / 100)
+      Label:
+        id: contrast_label
+        pos: self.parent.pos[0] + button_spacing + (button_size / 2), root.height - ((button_spacing + button_size) * (transform_loc + 1) - 18)
+        text: 'Contrast'
+        font_size: ratio_font_size
+        size_hint: None, None
+        text_size: self.size 
       Slider:
         id: contrast_slider
         pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * (transform_loc + 1))
@@ -189,6 +203,13 @@
         step: 1
         orientation: 'horizontal'
         on_value: root.set_contrast(self.value / 100)
+      Label:
+        id: saturation_label
+        pos: self.parent.pos[0] + button_spacing + (button_size / 2), root.height - ((button_spacing + button_size) * (transform_loc + 2) - 18)
+        text: 'Saturation'
+        font_size: ratio_font_size
+        size_hint: None, None
+        text_size: self.size       
       Slider:
         id: saturation_slider
         pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * (transform_loc + 2))
@@ -200,6 +221,13 @@
         step: 1
         orientation: 'horizontal'
         on_value: root.set_saturation(self.value / 100)
+      Label:
+        id: gamma_label
+        pos: self.parent.pos[0] + button_spacing + (button_size / 2), root.height - ((button_spacing + button_size) * (transform_loc + 3) - 18)
+        text: 'Gamma'
+        font_size: ratio_font_size
+        size_hint: None, None
+        text_size: self.size 
       Slider:
         id: gamma_slider
         pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * (transform_loc + 3))
