@@ -16,7 +16,7 @@
       #:set ratio_loc 3.5
       #:set ratio_font_size '12sp'
       #:set transform_loc 6
-      #:set save_loc 10.5
+      #:set save_loc 11.5
       id: tools_box      
       orientation: 'vertical'
       size_hint_x: None      
@@ -28,6 +28,7 @@
         Rectangle:
           pos: self.pos
           size: self.size
+
       Button:			
         id: back_button			
         pos: 6, root.height - 36
@@ -37,6 +38,7 @@
         background_down: 'images\\rotate-left.png'
         border: (2, 2, 2, 2)
         on_press: root.go_back()
+
       Button:            
         id: rotate_left_button        
         pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 0), root.height - ((button_spacing + button_size) * (position_loc + 0))
@@ -108,77 +110,85 @@
         background_normal: 'images\\zoom-out.png'
         background_down: 'images\\zoom-out.png'
         border: (2, 2, 2, 2)
-        on_press: root.adjust_zoom(0.01)
+        on_press: root.adjust_zoom(0.01)      
       
-      Button:            
-        id: ratio_current_button
-        text: 'Original'
-        font_size: ratio_font_size
-        pos: self.parent.pos[0] + button_spacing + (button_size / 2) + ((button_size + button_spacing) * 0), root.height - ((button_spacing + button_size) * (ratio_loc + 0))
-        size_hint: None, None
-        size: (button_size * 2) + button_spacing, button_size
-        on_press: root.set_ratio(None)
-      Button:            
-        id: ratio_current_button
-        text: '1:1'
-        font_size: ratio_font_size
-        pos: self.parent.pos[0] + button_spacing + (button_size / 2) + ((button_size + button_spacing) * 2), root.height - ((button_spacing + button_size) * (ratio_loc + 0))
-        size_hint: None, None
-        size: button_size, button_size              
-        on_press: root.set_ratio(1)
       Button:            
         id: ratio_16_9_button
         text: '16:9'
         font_size: ratio_font_size
-        pos: self.parent.pos[0] + button_spacing + (button_size / 2) + ((button_size + button_spacing) * 3), root.height - ((button_spacing + button_size) * (ratio_loc + 0))
+        pos: self.parent.pos[0] + (button_spacing * 1) + (button_size * 0), root.height - ((button_spacing + button_size) * (ratio_loc + 0))
         size_hint: None, None
         size: button_size, button_size        
-        on_press: root.set_ratio(16 / 9)       
+        on_press: root.set_ratio(16 / 9)
       Button:            
-        id: ratio_current_button
-        text: '2:3'
+        id: ratio_3_2_button
+        text: '3:2'
         font_size: ratio_font_size
-        pos: self.parent.pos[0] + button_spacing + (button_size / 2) + ((button_size + button_spacing) * 0), root.height - ((button_spacing + button_size) * (ratio_loc + 1))
+        pos: self.parent.pos[0] + (button_spacing * 2) + (button_size * 1), root.height - ((button_spacing + button_size) * (ratio_loc + 0))
         size_hint: None, None
         size: button_size, button_size        
-        on_press: root.set_ratio(2 / 3)
+        on_press: root.set_ratio(3 / 2)
       Button:            
-        id: ratio_current_button
-        text: '4:5'
-        font_size: ratio_font_size
-        pos: self.parent.pos[0] + button_spacing + (button_size / 2) + ((button_size + button_spacing) * 1), root.height - ((button_spacing + button_size) * (ratio_loc + 1))
-        size_hint: None, None
-        size: button_size, button_size        
-        on_press: root.set_ratio(4 / 5)      
-      Button:            
-        id: ratio_current_button
+        id: ratio_5_4_button
         text: '5:4'
         font_size: ratio_font_size
-        pos: self.parent.pos[0] + button_spacing + (button_size / 2) + ((button_size + button_spacing) * 2), root.height - ((button_spacing + button_size) * (ratio_loc + 1))
+        pos: self.parent.pos[0] + (button_spacing * 3) + (button_size * 2), root.height - ((button_spacing + button_size) * (ratio_loc + 0))
         size_hint: None, None
         size: button_size, button_size        
         on_press: root.set_ratio(5 / 4)
       Button:            
         id: ratio_current_button
-        text: '3:2'
+        text: 'Original'
         font_size: ratio_font_size
-        pos: self.parent.pos[0] + button_spacing + (button_size / 2) + ((button_size + button_spacing) * 3), root.height - ((button_spacing + button_size) * (ratio_loc + 1))
+        pos: self.parent.pos[0] + (button_spacing * 4) + (button_size * 3), root.height - ((button_spacing + button_size) * (ratio_loc + 0))
+        size_hint: None, None
+        size: (button_size * 2) + button_spacing, button_size
+        on_press: root.set_ratio(None)
+      Button:            
+        id: ratio_1_1_button
+        text: '1:1'
+        font_size: ratio_font_size
+        pos: self.parent.pos[0] + (button_spacing * 1) + (button_size * 0), root.height - ((button_spacing + button_size) * (ratio_loc + 1))
+        size_hint: None, None
+        size: button_size, button_size              
+        on_press: root.set_ratio(1)  
+      Button:            
+        id: ratio_2_3_button
+        text: '2:3'
+        font_size: ratio_font_size
+        pos: self.parent.pos[0] + (button_spacing * 2) + (button_size * 1), root.height - ((button_spacing + button_size) * (ratio_loc + 1))
         size_hint: None, None
         size: button_size, button_size        
-        on_press: root.set_ratio(3 / 2)
+        on_press: root.set_ratio(2 / 3)                       
+      Button:            
+        id: ratio_4_5_button
+        text: '4:5'
+        font_size: ratio_font_size
+        pos: self.parent.pos[0] + (button_spacing * 3) + (button_size * 2), root.height - ((button_spacing + button_size) * (ratio_loc + 1))
+        size_hint: None, None
+        size: button_size, button_size        
+        on_press: root.set_ratio(4 / 5)                  
+      Button:            
+        id: position_reset_button
+        text: 'Reset'
+        font_size: ratio_font_size
+        pos: self.parent.pos[0] + (button_spacing * 4) + (button_size * 3), root.height - ((button_spacing + button_size) * (ratio_loc + 1))
+        size_hint: None, None
+        size: (button_size * 2) + button_spacing, button_size        
+        on_press: root.position_reset()
       
       Label:
         id: brightness_label
-        pos: self.parent.pos[0] + button_spacing + (button_size / 2), root.height - ((button_spacing + button_size) * (transform_loc + 0) - 18)
+        pos: self.parent.pos[0] + (button_spacing * 2), root.height - ((button_spacing + button_size) * (transform_loc + 0) - 18)
         text: 'Brightness'
         font_size: ratio_font_size
         size_hint: None, None
         text_size: self.size
       Slider:
         id: brightness_slider
-        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * (transform_loc + 0))
+        pos: self.parent.pos[0], root.height - ((button_spacing + button_size) * (transform_loc + 0))
         size_hint: None, None
-        size: self.parent.size[0] - (button_spacing * 2), button_size
+        size: self.parent.size[0], button_size
         value_track_width: 1
         min: -100
         max: 100
@@ -187,16 +197,16 @@
         on_value: root.set_brightness(self.value / 100)
       Label:
         id: contrast_label
-        pos: self.parent.pos[0] + button_spacing + (button_size / 2), root.height - ((button_spacing + button_size) * (transform_loc + 1) - 18)
+        pos: self.parent.pos[0] + (button_spacing * 2), root.height - ((button_spacing + button_size) * (transform_loc + 1) - 18)
         text: 'Contrast'
         font_size: ratio_font_size
         size_hint: None, None
         text_size: self.size 
       Slider:
         id: contrast_slider
-        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * (transform_loc + 1))
+        pos: self.parent.pos[0], root.height - ((button_spacing + button_size) * (transform_loc + 1))
         size_hint: None, None
-        size: self.parent.size[0] - (button_spacing * 2), button_size
+        size: self.parent.size[0], button_size
         value_track_width: 1
         min: -100
         max: 100
@@ -205,16 +215,16 @@
         on_value: root.set_contrast(self.value / 100)
       Label:
         id: saturation_label
-        pos: self.parent.pos[0] + button_spacing + (button_size / 2), root.height - ((button_spacing + button_size) * (transform_loc + 2) - 18)
+        pos: self.parent.pos[0] + (button_spacing * 2), root.height - ((button_spacing + button_size) * (transform_loc + 2) - 18)
         text: 'Saturation'
         font_size: ratio_font_size
         size_hint: None, None
         text_size: self.size       
       Slider:
         id: saturation_slider
-        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * (transform_loc + 2))
+        pos: self.parent.pos[0], root.height - ((button_spacing + button_size) * (transform_loc + 2))
         size_hint: None, None
-        size: self.parent.size[0] - (button_spacing * 2), button_size
+        size: self.parent.size[0], button_size
         value_track_width: 1
         min: -100
         max: 100
@@ -223,22 +233,30 @@
         on_value: root.set_saturation(self.value / 100)
       Label:
         id: gamma_label
-        pos: self.parent.pos[0] + button_spacing + (button_size / 2), root.height - ((button_spacing + button_size) * (transform_loc + 3) - 18)
+        pos: self.parent.pos[0] + (button_spacing * 2), root.height - ((button_spacing + button_size) * (transform_loc + 3) - 18)
         text: 'Gamma'
         font_size: ratio_font_size
         size_hint: None, None
         text_size: self.size 
       Slider:
         id: gamma_slider
-        pos: self.parent.pos[0] + button_spacing, root.height - ((button_spacing + button_size) * (transform_loc + 3))
+        pos: self.parent.pos[0], root.height - ((button_spacing + button_size) * (transform_loc + 3))
         size_hint: None, None
-        size: self.parent.size[0] - (button_spacing * 2), button_size
+        size: self.parent.size[0], button_size
         value_track_width: 1
         min: -100
         max: 100
         step: 1
         orientation: 'horizontal'
         on_value: root.set_gamma(self.value / 100)
+      Button:
+        id: transform_undo_redo_button
+        text: 'Undo'
+        font_size: ratio_font_size
+        pos: self.parent.pos[0] + (button_spacing * 4) + (button_size * 3), root.height - ((button_spacing + button_size) * (transform_loc + 4))
+        size_hint: None, None
+        size: (button_size * 2) + button_spacing, button_size
+        on_press: root.transform_undo_redo()
       
       Button:
         id: save_button

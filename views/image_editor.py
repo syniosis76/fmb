@@ -22,8 +22,14 @@ class image_editor(Screen):
     data = None
     base_image = None
     transformed_image = None
+    pause_update = False
     parameters = None
     previous_zoom = None
+    previous_transform = None
+    brightness_factor = 2
+    contrast_factor = 4
+    saturation_factor = 2
+    gamma_factor = 2
 
     def __init__(self, **kwargs):
         super(image_editor, self).__init__(**kwargs) 
@@ -38,8 +44,17 @@ class image_editor(Screen):
     
     def on_enter(self):
         self.parameters = edit_parameters()
+        self.show_edit_parameters()
         self.load_image()              
         self.show_image(True)
+
+    def show_edit_parameters(self):
+        self.pause_update = True
+        self.ids.brightness_slider.value = self.power(self.parameters.brightness, 1 / self.brightness_factor) * 100
+        self.ids.contrast_slider.value = self.power(self.parameters.contrast, 1 / self.contrast_factor) * 100
+        self.ids.saturation_slider.value = self.power(self.parameters.saturation, 1 / self.saturation_factor) * 100
+        self.ids.gamma_slider.value = self.power(self.parameters.gamma, 1 / self.gamma_factor) * 100
+        self.pause_update = False
 
     def load_image(self):
         if self.app.thumbnailView.currentFile:
@@ -52,7 +67,7 @@ class image_editor(Screen):
             self.transformed_image = None
 
     def show_image(self, transform):        
-        if self.base_image:
+        if not self.pause_update and self.base_image:
             self.clear_editor_image()
 
             if transform or not self.transformed_image:
@@ -170,25 +185,29 @@ class image_editor(Screen):
             self.show_image(True)
 
     def set_brightness(self, value):
-        self.parameters.brightness = self.power(value, 2)
+        self.parameters.brightness = self.power(value, self.brightness_factor)
         self.show_image(False)
+        self.transform_clear_redo()
 
     def set_contrast(self, value):        
-        self.parameters.contrast = self.power(value, 5)
+        self.parameters.contrast = self.power(value, self.contrast_factor)
         self.show_image(False)
+        self.transform_clear_redo()
 
     def set_saturation(self, value):
-        self.parameters.saturation = self.power(value, 3)
+        self.parameters.saturation = self.power(value, self.saturation_factor)
         self.show_image(False)
+        self.transform_clear_redo()
 
     def set_gamma(self, value):
-        self.parameters.gamma = self.power(value, 2)
+        self.parameters.gamma = self.power(value, self.gamma_factor)
         self.show_image(False)
+        self.transform_clear_redo()
 
     def power(self, value, exponent):      
-      result = pow(value, exponent)
-      if value < 0 and result > 0:
-          result = result * -1
+      result = pow(abs(value), exponent)
+      if value < 0.0:
+          result = result * -1.0
 
       return result
 
@@ -240,6 +259,42 @@ class image_editor(Screen):
             self.fadeOutAnimation.start(self.ids.save_label)
 
             self.app.thumbnailView.trigger_save_layout()
+    
+    def transform_undo_redo(self):
+        if self.previous_transform == None:            
+            # Backup the current parameters.            
+            self.previous_transform = edit_parameters()
+            self.previous_transform.assign_transform(self.parameters)
+
+            # Reset the parameters
+            self.parameters = edit_parameters()
+
+            # Update the image
+            self.show_edit_parameters()
+            self.show_image(False)
+            self.ids.transform_undo_redo_button.text = 'Redo'            
+        else:
+            # Restore the parameters and clear the backup
+            self.parameters.assign_transform(self.previous_transform)
+            self.previous_transform = None
+
+            # Update the image
+            self.show_edit_parameters()
+            self.show_image(False)
+            self.ids.transform_undo_redo_button.text = 'Undo'
+
+    def transform_clear_redo(self):
+        if not self.pause_update:
+            self.previous_transform = None
+            self.ids.transform_undo_redo_button.text = 'Undo'   
+
+    def position_reset(self):
+        self.parameters.reset_position()
+        self.show_image(True)
+
+            
+            
+
 
             
 

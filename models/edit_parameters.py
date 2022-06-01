@@ -7,3 +7,15 @@ class edit_parameters():
   contrast = 0.0
   saturation = 0.0
   gamma = 0.0
+
+  def assign_transform(self, parameters):
+    self.brightness = parameters.brightness
+    self.contrast = parameters.contrast
+    self.saturation = parameters.saturation
+    self.gamma = parameters.gamma
+
+  def reset_position(self):
+    self.position = 0.0, 0.0
+    self.rotation = 0.0
+    self.zoom = 1.0
+    self.ratio = None  
