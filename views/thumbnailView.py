@@ -35,6 +35,9 @@ class DraggableGridLayout(DraggableLayoutBehavior, GridLayout):
         return 'before' if pos[0] < widget.center_x else 'after'
 
     def handle_drag_release(self, index, drag_widget):
+        current_index = self.children.index(drag_widget)
+        if index > current_index:
+            index = index - 1
         self.remove_widget(drag_widget)
         self.add_widget(drag_widget, index)
         self.dispatch('on_drag_complete')     
