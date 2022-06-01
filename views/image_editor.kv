@@ -47,7 +47,8 @@
         background_normal: 'images\\rotate-left.png'
         background_down: 'images\\rotate-left.png'
         border: (2, 2, 2, 2)
-        on_press: root.adjust_rotation(-0.2)        
+        on_press: root.start_adjustment(root.adjust_rotation, -0.2)
+        on_release: root.stop_adjustment()       
       Button:            
         id: move_up_button        
         pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 1), root.height - ((button_spacing + button_size) * (position_loc + 0))
@@ -56,7 +57,8 @@
         background_normal: 'images\\arrow-up.png'
         background_down: 'images\\arrow-up.png'
         border: (2, 2, 2, 2)
-        on_press: root.adjust_position((0, -1))
+        on_press: root.start_adjustment(root.adjust_position, (0, -1))
+        on_release: root.stop_adjustment()  
       Button:            
         id: rotate_right_button        
         pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 2), root.height - ((button_spacing + button_size) * (position_loc + 0))
@@ -65,7 +67,8 @@
         background_normal: 'images\\rotate-right.png'
         background_down: 'images\\rotate-right.png'
         border: (2, 2, 2, 2)
-        on_press: root.adjust_rotation(0.2)      
+        on_press: root.start_adjustment(root.adjust_rotation, 0.2)
+        on_release: root.stop_adjustment()     
       Button:            
         id: move_left_button        
         pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 0), root.height - ((button_spacing + button_size) * (position_loc + 1))
@@ -74,7 +77,8 @@
         background_normal: 'images\\arrow-left.png'
         background_down: 'images\\arrow-left.png'
         border: (2, 2, 2, 2)
-        on_press: root.adjust_position((-1, 0))
+        on_press: root.start_adjustment(root.adjust_position, (-1, 0))
+        on_release: root.stop_adjustment()  
       Button:            
         id: move_down_button        
         pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 1), root.height - ((button_spacing + button_size) * (position_loc + 1))
@@ -83,7 +87,8 @@
         background_normal: 'images\\arrow-down.png'
         background_down: 'images\\arrow-down.png'
         border: (2, 2, 2, 2)
-        on_press: root.adjust_position((0, 1))
+        on_press: root.start_adjustment(root.adjust_position, (0, 1))
+        on_release: root.stop_adjustment()  
       Button:            
         id: move_right_button        
         pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 2), root.height - ((button_spacing + button_size) * (position_loc + 1))
@@ -92,7 +97,8 @@
         background_normal: 'images\\arrow-right.png'
         background_down: 'images\\arrow-right.png'
         border: (2, 2, 2, 2)
-        on_press: root.adjust_position((1, 0))
+        on_press: root.start_adjustment(root.adjust_position, (1, 0))
+        on_release: root.stop_adjustment()  
       Button:            
         id: zoom_in_button        
         pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 4), root.height - ((button_spacing + button_size) * (position_loc + 0))
@@ -101,7 +107,8 @@
         background_normal: 'images\\zoom-in.png'
         background_down: 'images\\zoom-in.png'
         border: (2, 2, 2, 2)
-        on_press: root.adjust_zoom(-0.01)            
+        on_press: root.start_adjustment(root.adjust_zoom, -0.01)
+        on_release: root.stop_adjustment()           
       Button:            
         id: zoom_out_button        
         pos: self.parent.pos[0] + button_spacing + ((button_size + button_spacing) * 4), root.height - ((button_spacing + button_size) * (position_loc + 1))
@@ -110,7 +117,8 @@
         background_normal: 'images\\zoom-out.png'
         background_down: 'images\\zoom-out.png'
         border: (2, 2, 2, 2)
-        on_press: root.adjust_zoom(0.01)      
+        on_press: root.start_adjustment(root.adjust_zoom, 0.01)
+        on_release: root.stop_adjustment()      
       
       Button:            
         id: ratio_16_9_button

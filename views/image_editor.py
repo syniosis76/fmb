@@ -30,6 +30,7 @@ class image_editor(Screen):
     contrast_factor = 4
     saturation_factor = 2
     gamma_factor = 2
+    do_adjustment = False
 
     def __init__(self, **kwargs):
         super(image_editor, self).__init__(**kwargs) 
@@ -183,6 +184,25 @@ class image_editor(Screen):
         if zoom <= 1:
             self.parameters.zoom = zoom
             self.show_image(True)
+
+    def start_adjustment(self, method, value):
+        self.do_adjustment = True
+
+        Clock.schedule_once(lambda x: self.perform_first_adjustment(method, value), 0.001)               
+
+    def perform_first_adjustment(self, method, value):
+        method(value)
+        if self.do_adjustment:
+            Clock.schedule_once(lambda x: self.perform_repeat_adjustment(method, value), 0.300) 
+
+    def perform_repeat_adjustment(self, method, value):
+        if self.do_adjustment:
+            method(value)
+            if self.do_adjustment:
+                Clock.schedule_once(lambda x: self.perform_repeat_adjustment(method, value), 0.100)
+
+    def stop_adjustment(self):
+        self.do_adjustment = False
 
     def set_brightness(self, value):
         self.parameters.brightness = self.power(value, self.brightness_factor)
