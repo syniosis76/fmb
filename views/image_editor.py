@@ -120,16 +120,19 @@ class image_editor(Screen):
             self.ids.image_editor_box.add_widget(image_widget)   
 
     def on_touch_down(self, touch):
-        if not self.ids.back_button.collide_point(*touch.pos) and self.ids.image_editor_box.collide_point(*touch.pos):
-            print('Touch Down')
+        if touch.is_mouse_scrolling:
+            if touch.button == 'scrolldown':
+                self.adjust_zoom(-0.02)
+            elif touch.button == 'scrollup':
+                self.adjust_zoom(0.02)
+        elif not self.ids.back_button.collide_point(*touch.pos) and self.ids.image_editor_box.collide_point(*touch.pos):            
             self.touch = (touch.px, touch.py)
             self.touch_position = self.parameters.position
         else:
             super().on_touch_down(touch)
 
     def on_touch_move(self, touch):
-        if not self.ids.back_button.collide_point(*touch.pos) and self.ids.image_editor_box.collide_point(*touch.pos):
-            print('Touch Move')
+        if not self.ids.back_button.collide_point(*touch.pos) and self.ids.image_editor_box.collide_point(*touch.pos):            
             if self.touch and self.touch_position:
                 dx = touch.px - self.touch[0]
                 dy = (touch.py - self.touch[1]) * -1
@@ -143,10 +146,10 @@ class image_editor(Screen):
     
     def on_touch_up(self, touch):
         if not self.ids.back_button.collide_point(*touch.pos) and self.ids.image_editor_box.collide_point(*touch.pos):
-            print('Touch Up')
-        else:
-            super().on_touch_up(touch)
             self.touch = None
+            self.touch_position = None
+        else:
+            super().on_touch_up(touch)            
     
     def clear_editor_image(self):             
         image_editor_box = self.ids.image_editor_box
