@@ -32,6 +32,8 @@ class image_editor(Screen):
     saturation_factor = 2
     gamma_factor = 2
     do_adjustment = False
+    touch = None
+    touch_position = None
 
     def __init__(self, **kwargs):
         super(image_editor, self).__init__(**kwargs) 
@@ -114,9 +116,38 @@ class image_editor(Screen):
                     
             image_widget = Image()
             image_widget.texture = texture
-            
+          
             self.ids.image_editor_box.add_widget(image_widget)   
 
+    def on_touch_down(self, touch):
+        if not self.ids.back_button.collide_point(*touch.pos) and self.ids.image_editor_box.collide_point(*touch.pos):
+            print('Touch Down')
+            self.touch = (touch.px, touch.py)
+            self.touch_position = self.parameters.position
+        else:
+            super().on_touch_down(touch)
+
+    def on_touch_move(self, touch):
+        if not self.ids.back_button.collide_point(*touch.pos) and self.ids.image_editor_box.collide_point(*touch.pos):
+            print('Touch Move')
+            if self.touch and self.touch_position:
+                dx = touch.px - self.touch[0]
+                dy = (touch.py - self.touch[1]) * -1
+                max_size = max(self.ids.image_editor_box.size)
+                px = 100.0 / max_size * dx
+                py = 100.0 / max_size * dy
+                self.parameters.position = (self.touch_position[0] + px, self.touch_position[1] + py)
+                self.show_image(False, True)
+        else:
+            super().on_touch_move(touch)            
+    
+    def on_touch_up(self, touch):
+        if not self.ids.back_button.collide_point(*touch.pos) and self.ids.image_editor_box.collide_point(*touch.pos):
+            print('Touch Up')
+        else:
+            super().on_touch_up(touch)
+            self.touch = None
+    
     def clear_editor_image(self):             
         image_editor_box = self.ids.image_editor_box
         image_editor_box.clear_widgets()    

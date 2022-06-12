@@ -57,7 +57,7 @@
         background_normal: 'images\\arrow-up.png'
         background_down: 'images\\arrow-up.png'
         border: (2, 2, 2, 2)
-        on_press: root.start_adjustment(root.adjust_position, (0, -0.5))
+        on_press: root.start_adjustment(root.adjust_position, (0, 0.5))
         on_release: root.stop_adjustment()  
       Button:            
         id: rotate_right_button        
@@ -77,7 +77,7 @@
         background_normal: 'images\\arrow-left.png'
         background_down: 'images\\arrow-left.png'
         border: (2, 2, 2, 2)
-        on_press: root.start_adjustment(root.adjust_position, (-0.5, 0))
+        on_press: root.start_adjustment(root.adjust_position, (0.5, 0))
         on_release: root.stop_adjustment()  
       Button:            
         id: move_down_button        
@@ -87,7 +87,7 @@
         background_normal: 'images\\arrow-down.png'
         background_down: 'images\\arrow-down.png'
         border: (2, 2, 2, 2)
-        on_press: root.start_adjustment(root.adjust_position, (0, 0.5))
+        on_press: root.start_adjustment(root.adjust_position, (0, -0.5))
         on_release: root.stop_adjustment()  
       Button:            
         id: move_right_button        
@@ -97,7 +97,7 @@
         background_normal: 'images\\arrow-right.png'
         background_down: 'images\\arrow-right.png'
         border: (2, 2, 2, 2)
-        on_press: root.start_adjustment(root.adjust_position, (0.5, 0))
+        on_press: root.start_adjustment(root.adjust_position, (-0.5, 0))
         on_release: root.stop_adjustment()  
       Button:            
         id: zoom_in_button        
