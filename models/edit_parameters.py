@@ -8,7 +8,7 @@ class edit_parameters():
   saturation = 0.0
   gamma = 0.0
 
-  def assign_transform(self, parameters):
+  def assign_adjustment(self, parameters):
     self.brightness = parameters.brightness
     self.contrast = parameters.contrast
     self.saturation = parameters.saturation

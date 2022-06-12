@@ -21,11 +21,12 @@ class image_editor(Screen):
     app = None
     data = None
     base_image = None
+    sized_image = None
     transformed_image = None
     pause_update = False
     parameters = None
     previous_zoom = None
-    previous_transform = None
+    previous_adjustment = None
     brightness_factor = 2
     contrast_factor = 4
     saturation_factor = 2
@@ -47,7 +48,7 @@ class image_editor(Screen):
         self.parameters = edit_parameters()
         self.show_edit_parameters()
         self.load_image()              
-        self.show_image(True)
+        self.show_image(True, True)
 
     def show_edit_parameters(self):
         self.pause_update = True
@@ -65,29 +66,41 @@ class image_editor(Screen):
             orientation = exifhandler.get_orientation(self.base_image)
             if orientation in (6, 8):
                 self.base_image = exifhandler.rotate_image(self.base_image, orientation)
+            self.sized_image = None
             self.transformed_image = None
 
-    def show_image(self, transform):        
+    def transform_image(self, image, parameters):
+        box_width, box_height = self.ids.image_editor_box.size
+        box_ratio = box_width / box_height
+        width, height = image.size
+        if self.parameters.ratio == None:
+            ratio = width / height
+        else:
+            ratio = self.parameters.ratio
+
+        if box_ratio < ratio:
+            size = box_width, box_width / ratio
+        else:
+            size = box_height * ratio, box_height
+
+        return transform_image.transform(image, size, parameters)
+
+    
+    def show_image(self, size, transform):        
         if not self.pause_update and self.base_image:
             self.clear_editor_image()
 
-            if transform or not self.transformed_image:
-                image = self.base_image.copy()                    
-
-                box_width, box_height = self.ids.image_editor_box.size
-                box_ratio = box_width / box_height
-                width, height = image.size
-                if self.parameters.ratio == None:
-                    ratio = width / height
-                else:
-                    ratio = self.parameters.ratio
-
-                if box_ratio < ratio:
-                    size = box_width, box_width / ratio
-                else:
-                    size = box_height * ratio, box_height
-
-                self.transformed_image = transform_image.transform(image, size, self.parameters)            
+            if size or transform or not self.transformed_image:
+                if not size:
+                    if not self.sized_image:                                            
+                        size_parameters = edit_parameters()
+                        self.sized_image = self.transform_image(self.base_image, size_parameters)
+                        
+                    self.transformed_image = self.transform_image(self.sized_image, self.parameters)
+                else:                    
+                    image = self.base_image
+                    self.sized_image = None
+                    self.transformed_image = self.transform_image(image, self.parameters)
             
             image = self.transformed_image
             
@@ -110,7 +123,7 @@ class image_editor(Screen):
 
     # Reload the Image on resize to scale to fit. 
     def on_window_resize(self, window, width, height):
-        Clock.schedule_once(lambda x: self.show_image(True), 0.1)        
+        Clock.schedule_once(lambda x: self.show_image(True, True), 0.1)        
     
     def on_key_down(self, window, keycode, text, modifiers, x):        
         if self.manager.current == self.name:
@@ -141,7 +154,7 @@ class image_editor(Screen):
 
         self.check_zoom()
 
-        self.show_image(True)
+        self.show_image(True, True)
 
     def check_zoom(self):
         if self.base_image:
@@ -172,18 +185,18 @@ class image_editor(Screen):
 
     def adjust_position(self, amount):
         self.parameters.position = (self.parameters.position[0] + amount[0], self.parameters.position[1] + amount[1])
-        self.show_image(True)
+        self.show_image(False, True)
     
     def adjust_rotation(self, amount):
         self.parameters.rotation += amount
-        self.show_image(True)
+        self.show_image(False, True)
     
     def adjust_zoom(self, amount):
         self.previous_zoom = None # Clear Previous Zoom if manually set.
         zoom = self.parameters.zoom + amount
         if zoom <= 1:
             self.parameters.zoom = zoom
-            self.show_image(True)
+            self.show_image(True, True)
 
     def start_adjustment(self, method, value):
         self.do_adjustment = True
@@ -199,30 +212,30 @@ class image_editor(Screen):
         if self.do_adjustment:
             method(value)
             if self.do_adjustment:
-                Clock.schedule_once(lambda x: self.perform_repeat_adjustment(method, value), 0.100)
+                Clock.schedule_once(lambda x: self.perform_repeat_adjustment(method, value), 0.010)
 
     def stop_adjustment(self):
         self.do_adjustment = False
 
     def set_brightness(self, value):
         self.parameters.brightness = self.power(value, self.brightness_factor)
-        self.show_image(False)
-        self.transform_clear_redo()
+        self.show_image(False, False)
+        self.adustment_clear_redo()
 
     def set_contrast(self, value):        
         self.parameters.contrast = self.power(value, self.contrast_factor)
-        self.show_image(False)
-        self.transform_clear_redo()
+        self.show_image(False, False)
+        self.adustment_clear_redo()
 
     def set_saturation(self, value):
         self.parameters.saturation = self.power(value, self.saturation_factor)
-        self.show_image(False)
-        self.transform_clear_redo()
+        self.show_image(False, False)
+        self.adustment_clear_redo()
 
     def set_gamma(self, value):
         self.parameters.gamma = self.power(value, self.gamma_factor)
-        self.show_image(False)
-        self.transform_clear_redo()
+        self.show_image(False, False)
+        self.adustment_clear_redo()
 
     def power(self, value, exponent):      
       result = pow(abs(value), exponent)
@@ -280,37 +293,37 @@ class image_editor(Screen):
 
             self.app.thumbnailView.trigger_save_layout()
     
-    def transform_undo_redo(self):
-        if self.previous_transform == None:            
+    def adjustment_undo_redo(self):
+        if self.previous_adjustment == None:            
             # Backup the current parameters.            
-            self.previous_transform = edit_parameters()
-            self.previous_transform.assign_transform(self.parameters)
+            self.previous_adjustment = edit_parameters()
+            self.previous_adjustment.assign_adjustment(self.parameters)
 
             # Reset the parameters
             self.parameters = edit_parameters()
 
             # Update the image
             self.show_edit_parameters()
-            self.show_image(False)
-            self.ids.transform_undo_redo_button.text = 'Redo'            
+            self.show_image(False, False)
+            self.ids.adjustment_undo_redo_button.text = 'Redo'            
         else:
             # Restore the parameters and clear the backup
-            self.parameters.assign_transform(self.previous_transform)
-            self.previous_transform = None
+            self.parameters.assign_adjustment(self.previous_adjustment)
+            self.previous_adjustment = None
 
             # Update the image
             self.show_edit_parameters()
-            self.show_image(False)
-            self.ids.transform_undo_redo_button.text = 'Undo'
+            self.show_image(False, False)
+            self.ids.adjustment_undo_redo_button.text = 'Undo'
 
-    def transform_clear_redo(self):
+    def adustment_clear_redo(self):
         if not self.pause_update:
-            self.previous_transform = None
-            self.ids.transform_undo_redo_button.text = 'Undo'   
+            self.previous_adjustment = None
+            self.ids.adjustment_undo_redo_button.text = 'Undo'   
 
     def position_reset(self):
         self.parameters.reset_position()
-        self.show_image(True)
+        self.show_image(True, True)
 
             
             

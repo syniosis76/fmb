@@ -15,7 +15,7 @@
       #:set position_loc 1
       #:set ratio_loc 3.5
       #:set ratio_font_size '12sp'
-      #:set transform_loc 6
+      #:set adjustment_loc 6
       #:set save_loc 11.5
       id: tools_box      
       orientation: 'vertical'
@@ -57,7 +57,7 @@
         background_normal: 'images\\arrow-up.png'
         background_down: 'images\\arrow-up.png'
         border: (2, 2, 2, 2)
-        on_press: root.start_adjustment(root.adjust_position, (0, -1))
+        on_press: root.start_adjustment(root.adjust_position, (0, -0.5))
         on_release: root.stop_adjustment()  
       Button:            
         id: rotate_right_button        
@@ -77,7 +77,7 @@
         background_normal: 'images\\arrow-left.png'
         background_down: 'images\\arrow-left.png'
         border: (2, 2, 2, 2)
-        on_press: root.start_adjustment(root.adjust_position, (-1, 0))
+        on_press: root.start_adjustment(root.adjust_position, (-0.5, 0))
         on_release: root.stop_adjustment()  
       Button:            
         id: move_down_button        
@@ -87,7 +87,7 @@
         background_normal: 'images\\arrow-down.png'
         background_down: 'images\\arrow-down.png'
         border: (2, 2, 2, 2)
-        on_press: root.start_adjustment(root.adjust_position, (0, 1))
+        on_press: root.start_adjustment(root.adjust_position, (0, 0.5))
         on_release: root.stop_adjustment()  
       Button:            
         id: move_right_button        
@@ -97,7 +97,7 @@
         background_normal: 'images\\arrow-right.png'
         background_down: 'images\\arrow-right.png'
         border: (2, 2, 2, 2)
-        on_press: root.start_adjustment(root.adjust_position, (1, 0))
+        on_press: root.start_adjustment(root.adjust_position, (0.5, 0))
         on_release: root.stop_adjustment()  
       Button:            
         id: zoom_in_button        
@@ -187,14 +187,14 @@
       
       Label:
         id: brightness_label
-        pos: self.parent.pos[0] + (button_spacing * 2), root.height - ((button_spacing + button_size) * (transform_loc + 0) - 18)
+        pos: self.parent.pos[0] + (button_spacing * 2), root.height - ((button_spacing + button_size) * (adjustment_loc + 0) - 18)
         text: 'Brightness'
         font_size: ratio_font_size
         size_hint: None, None
         text_size: self.size
       Slider:
         id: brightness_slider
-        pos: self.parent.pos[0], root.height - ((button_spacing + button_size) * (transform_loc + 0))
+        pos: self.parent.pos[0], root.height - ((button_spacing + button_size) * (adjustment_loc + 0))
         size_hint: None, None
         size: self.parent.size[0], button_size
         value_track_width: 1
@@ -205,14 +205,14 @@
         on_value: root.set_brightness(self.value / 100)
       Label:
         id: contrast_label
-        pos: self.parent.pos[0] + (button_spacing * 2), root.height - ((button_spacing + button_size) * (transform_loc + 1) - 18)
+        pos: self.parent.pos[0] + (button_spacing * 2), root.height - ((button_spacing + button_size) * (adjustment_loc + 1) - 18)
         text: 'Contrast'
         font_size: ratio_font_size
         size_hint: None, None
         text_size: self.size 
       Slider:
         id: contrast_slider
-        pos: self.parent.pos[0], root.height - ((button_spacing + button_size) * (transform_loc + 1))
+        pos: self.parent.pos[0], root.height - ((button_spacing + button_size) * (adjustment_loc + 1))
         size_hint: None, None
         size: self.parent.size[0], button_size
         value_track_width: 1
@@ -223,14 +223,14 @@
         on_value: root.set_contrast(self.value / 100)
       Label:
         id: saturation_label
-        pos: self.parent.pos[0] + (button_spacing * 2), root.height - ((button_spacing + button_size) * (transform_loc + 2) - 18)
+        pos: self.parent.pos[0] + (button_spacing * 2), root.height - ((button_spacing + button_size) * (adjustment_loc + 2) - 18)
         text: 'Saturation'
         font_size: ratio_font_size
         size_hint: None, None
         text_size: self.size       
       Slider:
         id: saturation_slider
-        pos: self.parent.pos[0], root.height - ((button_spacing + button_size) * (transform_loc + 2))
+        pos: self.parent.pos[0], root.height - ((button_spacing + button_size) * (adjustment_loc + 2))
         size_hint: None, None
         size: self.parent.size[0], button_size
         value_track_width: 1
@@ -241,14 +241,14 @@
         on_value: root.set_saturation(self.value / 100)
       Label:
         id: gamma_label
-        pos: self.parent.pos[0] + (button_spacing * 2), root.height - ((button_spacing + button_size) * (transform_loc + 3) - 18)
+        pos: self.parent.pos[0] + (button_spacing * 2), root.height - ((button_spacing + button_size) * (adjustment_loc + 3) - 18)
         text: 'Gamma'
         font_size: ratio_font_size
         size_hint: None, None
         text_size: self.size 
       Slider:
         id: gamma_slider
-        pos: self.parent.pos[0], root.height - ((button_spacing + button_size) * (transform_loc + 3))
+        pos: self.parent.pos[0], root.height - ((button_spacing + button_size) * (adjustment_loc + 3))
         size_hint: None, None
         size: self.parent.size[0], button_size
         value_track_width: 1
@@ -258,13 +258,13 @@
         orientation: 'horizontal'
         on_value: root.set_gamma(self.value / 100)
       Button:
-        id: transform_undo_redo_button
+        id: adjustment_undo_redo_button
         text: 'Undo'
         font_size: ratio_font_size
-        pos: self.parent.pos[0] + (button_spacing * 4) + (button_size * 3), root.height - ((button_spacing + button_size) * (transform_loc + 4))
+        pos: self.parent.pos[0] + (button_spacing * 4) + (button_size * 3), root.height - ((button_spacing + button_size) * (adjustment_loc + 4))
         size_hint: None, None
         size: (button_size * 2) + button_spacing, button_size
-        on_press: root.transform_undo_redo()
+        on_press: root.adjustment_undo_redo()
       
       Button:
         id: save_button
