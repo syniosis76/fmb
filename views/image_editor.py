@@ -87,6 +87,23 @@ class image_editor(Screen):
 
         return transform_image.transform(image, size, parameters)
 
+    def size_image(self, image, zoom):                
+        box_width, box_height = self.ids.image_editor_box.size
+        box_ratio = box_width / box_height
+        width, height = image.size
+        ratio = width / height
+
+        if box_ratio < ratio:
+            size = box_width, box_width / ratio
+        else:
+            size = box_height * ratio, box_height
+
+        inverse_zoom = 1.0 / zoom
+        size = size[0] * inverse_zoom, size[1] * inverse_zoom
+
+        parameters = edit_parameters()
+        return transform_image.transform(image, size, parameters)
+
     
     def show_image(self, size, transform):        
         if not self.pause_update and self.base_image:
@@ -94,9 +111,8 @@ class image_editor(Screen):
 
             if size or transform or not self.transformed_image:
                 if not size:
-                    if not self.sized_image:                                            
-                        size_parameters = edit_parameters()
-                        self.sized_image = self.transform_image(self.base_image, size_parameters)
+                    if not self.sized_image:                                                                    
+                        self.sized_image = self.size_image(self.base_image, self.parameters.zoom)
                         
                     self.transformed_image = self.transform_image(self.sized_image, self.parameters)
                 else:                    
@@ -334,7 +350,7 @@ class image_editor(Screen):
             self.previous_adjustment.assign_adjustment(self.parameters)
 
             # Reset the parameters
-            self.parameters = edit_parameters()
+            self.parameters.reset_adjustment()
 
             # Update the image
             self.show_edit_parameters()
@@ -347,7 +363,7 @@ class image_editor(Screen):
 
             # Update the image
             self.show_edit_parameters()
-            self.show_image(False, False)
+            self.show_image(True, True)
             self.ids.adjustment_undo_redo_button.text = 'Undo'
 
     def adustment_clear_redo(self):

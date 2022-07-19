@@ -14,6 +14,12 @@ class edit_parameters():
     self.saturation = parameters.saturation
     self.gamma = parameters.gamma
 
+  def reset_adjustment(self):
+    self.brightness = 0.0
+    self.contrast = 0.0
+    self.saturation = 0.0
+    self.gamma = 0.0
+
   def reset_position(self):
     self.position = 0.0, 0.0
     self.rotation = 0.0
