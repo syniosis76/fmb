@@ -5,10 +5,11 @@ os.environ['KIVY_WINDOW'] = 'sdl2'
 os.environ['KIVY_VIDEO'] = 'ffpyplayer'
 
 import kivy
-kivy.require('1.11.1')
+kivy.require('2.0.0')
 
 from kivy.config import Config
 Config.set('kivy', 'exit_on_escape', 0)
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, NoTransition
