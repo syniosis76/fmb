@@ -49,7 +49,8 @@ class DraggableGridLayout(DraggableLayoutBehavior, GridLayout):
         pass
     
 class ThumbnailImage(Image):
-    pass
+    focused = False
+    selected = False
 
 class ThumbnailWidget(DraggableObjectBehavior, FloatLayout):
     def __init__(self, **kwargs):
@@ -68,6 +69,7 @@ class ThumbnailView(Screen):
     folder = Folder()
     cancel_thread = None
     thread = None
+    keyboard_modifiers = []
 
     def __init__(self, **kwargs):        
         super(ThumbnailView, self).__init__(**kwargs)                   
@@ -240,6 +242,8 @@ class ThumbnailView(Screen):
 
     def showSelected(self, object):
         if object:
+            object.selected = True
+
             object.canvas.after.clear()
 
             width = object.size[0]
@@ -253,15 +257,25 @@ class ThumbnailView(Screen):
 
             with object.canvas.after:
                 Color(0.207, 0.463, 0.839, mode='rgb')
-                Line(width=sp(2), rectangle=(x, y, imageWidth, imageHeight))                        
-
-    def thumbnailPosChanged(self, object, pos):
-        if object == self.currentImage:
-            self.showSelected(object)
+                Line(width=sp(2), rectangle=(x, y, imageWidth, imageHeight))                            
 
     def hideSelected(self, object):
         if object:
+            object.selected = False
             object.canvas.after.clear()
+        
+    def clear_selected(self):
+        thumbnailGrid = self.ids.thumbnailGrid
+        length = len(thumbnailGrid.children)
+
+        for index in range(length - 1, -1, -1):
+            widget = thumbnailGrid.children[index]
+            image = widget.children[0] 
+            self.hideSelected(image)   
+    
+    def thumbnailPosChanged(self, object, pos):
+        if object == self.currentImage:
+            self.showSelected(object)
 
     def updateThumbnailGridSize(self, width):
         thumbnailGrid = self.ids.thumbnailGrid
@@ -292,7 +306,9 @@ class ThumbnailView(Screen):
                 image = widget.children[0]
                 
                 if touch.is_double_tap or image != self.currentImage:
-                    self.hideSelected(self.currentImage)
+                    
+                    if 'ctrl' not in self.keyboard_modifiers:
+                        self.clear_selected()
                             
                     thumbnailGrid = self.ids.thumbnailGrid
                     self.currentIndex = thumbnailGrid.children.index(widget)
@@ -301,7 +317,7 @@ class ThumbnailView(Screen):
 
                     self.showSelected(image)
 
-                    if touch.is_double_tap:
+                    if touch.is_double_tap and 'shift' not in self.keyboard_modifiers:
                         self.manager.transition.direction = 'left'
                         self.manager.current = 'ImageView'
                                         
@@ -388,6 +404,8 @@ class ThumbnailView(Screen):
 
     def on_key_down(self, window, keycode, text, modifiers, x):
         if self.manager.current == self.name:
+            self.add_keyboard_modifier(keycode)
+
             #logging.info('ThumbnailView Key Down: ' + str(keycode))
             if keycode == Keyboard.keycodes['right']:
                 self.changeImage(-1)
@@ -411,7 +429,32 @@ class ThumbnailView(Screen):
     
     def on_key_up(self, window, keycode, text):
         if self.manager.current == self.name:
-            pass #logging.info('ThumbnailView Key Up: ' + str(keycode))
+            self.remove_keyboard_modifier(keycode)
+            #logging.info('ThumbnailView Key Up: ' + str(keycode))
+
+    def add_keyboard_modifier(self, keycode):        
+        modifiers = self.get_keycode_modifiers(keycode)
+
+        for modifier in modifiers:
+            if modifier not in self.keyboard_modifiers:
+                self.keyboard_modifiers.append(modifier)
+
+    def remove_keyboard_modifier(self, keycode):        
+        modifiers = self.get_keycode_modifiers(keycode)
+
+        for modifier in modifiers:
+            if modifier in self.keyboard_modifiers:
+                self.keyboard_modifiers.remove(modifier)
+
+    def get_keycode_modifiers(self, keycode):
+        if keycode == Keyboard.keycodes['rctrl']:
+            return ['ctrl', 'rctrl']
+        elif keycode == Keyboard.keycodes['lctrl']:
+            return ['ctrl', 'lctrl']
+        elif keycode == Keyboard.keycodes['shift']:
+            return ['shift']
+        
+        return []
 
     def showFolders(self):
         folderGrid = self.ids.folderGrid
