@@ -64,6 +64,7 @@ class ThumbnailView(Screen):
     data = None
     columns = 1
     currentIndex = None
+    shift_index = None
     currentImage = None
     currentFile = None
     folder = Folder()
@@ -305,26 +306,52 @@ class ThumbnailView(Screen):
             if widget:
                 image = widget.children[0]
                 
-                if touch.is_double_tap or image != self.currentImage:
-                    
+                if touch.is_double_tap or image != self.currentImage:                    
+                    thumbnailGrid = self.ids.thumbnailGrid
+
                     if 'ctrl' not in self.keyboard_modifiers:
                         self.clear_selected()
-                            
-                    thumbnailGrid = self.ids.thumbnailGrid
-                    self.currentIndex = thumbnailGrid.children.index(widget)
-                    self.currentImage = image
-                    self.currentFile = image.mediaFile
 
-                    self.showSelected(image)
+                    if 'shift' in self.keyboard_modifiers:
+                        self.shift_select(thumbnailGrid.children.index(widget))                        
+                    else:
+                        self.shift_index = None
 
-                    if touch.is_double_tap and 'shift' not in self.keyboard_modifiers:
-                        self.manager.transition.direction = 'left'
-                        self.manager.current = 'ImageView'
+                        self.currentIndex = thumbnailGrid.children.index(widget)
+                        self.currentImage = image
+                        self.currentFile = image.mediaFile
+
+                        self.showSelected(image)
+
+                        if touch.is_double_tap:
+                            self.manager.transition.direction = 'left'
+                            self.manager.current = 'ImageView'
                                         
                     super(ThumbnailWidget, widget).on_touch_down(touch)
 
                     return True
 
+    def shift_select(self, selected_index):
+        thumbnailGrid = self.ids.thumbnailGrid
+
+        if self.shift_index == None:
+            self.shift_index = self.currentIndex
+
+        # Select all images beteen the initial and the current.
+        start_index = min(selected_index, self.shift_index)
+        end_index = max(selected_index, self.shift_index)
+        for select_index in range(start_index, end_index + 1):
+            select_widget = thumbnailGrid.children[select_index]
+            select_image = select_widget.children[0]
+            self.showSelected(select_image)
+        
+        # Focus the selected item
+        current_widget = thumbnailGrid.children[selected_index]
+        current_image = current_widget.children[0]
+        self.currentIndex = selected_index
+        self.currentImage = current_image
+        self.currentFile = current_image.mediaFile
+    
     def changeImage(self, offset):                
         thumbnailGrid = self.ids.thumbnailGrid
 
@@ -334,8 +361,16 @@ class ThumbnailView(Screen):
             if self.currentIndex == None:            
                 newIndex = 0
             else:
-                newIndex = self.currentIndex + offset           
+                newIndex = self.currentIndex + offset
 
+            if 'ctrl' not in self.keyboard_modifiers:
+                self.clear_selected()
+
+            if 'shift' in self.keyboard_modifiers:
+                self.shift_select(newIndex)
+            else:
+                self.shift_index = None
+                
             return self.selectImage(newIndex)
 
         return False
@@ -349,7 +384,8 @@ class ThumbnailView(Screen):
             newIndex = len(thumbnailGrid.children) - 1
 
         if force or self.currentImage == None or self.currentIndex != newIndex:
-            self.hideSelected(self.currentImage)
+            if 'ctrl' not in self.keyboard_modifiers and 'shift' not in self.keyboard_modifiers:
+                self.clear_selected() 
 
             self.currentIndex = newIndex
             thumbnailWidget = thumbnailGrid.children[newIndex]                        
@@ -364,19 +400,37 @@ class ThumbnailView(Screen):
         return False
 
     def delete(self):
-        if self.currentImage:
-            currentImage = self.currentImage
-            file = currentImage.mediaFile
-            widget = self.currentImage.parent
-            thumbnailGrid = self.ids.thumbnailGrid
-            thumbnailGrid.remove_widget(widget)
-            self.selectImage(self.currentIndex - 1, True) # Select the next image.            
-            threading.Thread(target=(lambda: self.deleteThread(file))).start()
-            self.trigger_save_layout()        
+        if self.currentImage:            
+            threading.Thread(target=(lambda: self.deleteThread())).start()   
+
+    def deleteThread(self):
+        currentIndex = self.currentIndex
+        thumbnailGrid = self.ids.thumbnailGrid
+        length = len(thumbnailGrid.children)
+
+        for index in range(length - 1, -1, -1):
+            widget = thumbnailGrid.children[index]
+            image = widget.children[0] 
+            if image.selected:
+                file = image.mediaFile
+                self.deleteImage(image)
+                self.deleteFile(file)
+
+        self.deleteComplete(currentIndex)
+
+    @mainthread
+    def deleteImage(self, image):
+        widget = image.parent        
+        self.ids.thumbnailGrid.remove_widget(widget)
     
-    def deleteThread(self, file):        
+    def deleteFile(self, file):        
         os.remove(file.thumbnailPath)
         send2trash(file.path)
+
+    @mainthread
+    def deleteComplete(self, index):
+        self.selectImage(index - 1, True) # Select the next image.                        
+        self.trigger_save_layout()
 
     def openHomeFolderClick(self):
         self.data.rootFolder = ''
