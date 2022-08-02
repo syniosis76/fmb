@@ -223,7 +223,7 @@ class ImageView(Screen):
         return False
     
     def delete(self):
-        self.app.thumbnailView.delete()
+        self.app.thumbnailView.delete_current()
         self.loadMedia()
 
     def videoSeekBySeconds(self, seconds):
