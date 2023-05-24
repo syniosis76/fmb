@@ -51,11 +51,20 @@ class DraggableGridLayout(DraggableLayoutBehavior, GridLayout):
 class ThumbnailImage(Image):
     focused = False
     selected = False
+    canvas_after_operations = []
 
-class ThumbnailWidget(DraggableObjectBehavior, FloatLayout):
+    def add_canvas_after_operation(self, operation):
+        self.canvas_after_operations.append(operation)
+        self.canvas.after.add(operation)
+
+    def clear_canvas_after_operations(self):
+        while len(self.canvas_after_operations) > 0:
+            operation = self.canvas_after_operations.pop()
+            self.canvas.after.remove(operation)
+
+class ThumbnailWidget(DraggableObjectBehavior, FloatLayout):    
     def __init__(self, **kwargs):
-        super(ThumbnailWidget, self).__init__(
-            **kwargs, drag_controller=drag_controller)
+        super(ThumbnailWidget, self).__init__(**kwargs, drag_controller=drag_controller)
 
 Builder.load_file('views/thumbnailView.kv')
 
@@ -242,10 +251,14 @@ class ThumbnailView(Screen):
 
 
     def showSelected(self, object):
-        if object:
-            object.selected = True
+        if object and not object.selected:
+            logging.info('Select ' + object.mediaFile.name)
 
-            object.canvas.after.clear()
+            object.selected = True            
+
+            object.clear_canvas_after_operations()
+
+            # Add blue outline.
 
             width = object.size[0]
             height = object.size[1]
@@ -256,16 +269,16 @@ class ThumbnailView(Screen):
             x = object.pos[0] + ((width - imageWidth) / 2)
             y = object.pos[1] + ((height - imageHeight) / 2)
 
-            with object.canvas.after:
-                Color(0.207, 0.463, 0.839, mode='rgb')
-                Line(width=sp(2), rectangle=(x, y, imageWidth, imageHeight))
+            object.add_canvas_after_operation(Color(0.207, 0.463, 0.839, mode='rgb'))
+            object.add_canvas_after_operation(Line(width=sp(2), rectangle=(x, y, imageWidth, imageHeight)))
 
     def hideSelected(self, object):
-        if object:
-            object.selected = False
-            object.canvas.after.clear()
+        if object and object.selected:
+            logging.info('Deselect ' + object.mediaFile.name)           
+            object.selected = False            
+            object.clear_canvas_after_operations()
 
-    def clear_selected(self):
+    def clear_selected(self):        
         thumbnailGrid = self.ids.thumbnailGrid
         length = len(thumbnailGrid.children)
 

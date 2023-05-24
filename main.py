@@ -21,8 +21,8 @@ from views.thumbnailView import ThumbnailView
 from views.imageView import ImageView
 from views.image_editor import image_editor
 
-#from kivy.logger import Logger, LOG_LEVELS
-#Logger.setLevel(LOG_LEVELS["debug"])
+from kivy.logger import Logger, LOG_LEVELS
+Logger.setLevel(LOG_LEVELS["info"]) # trace, debug, info, warning, error, critical
 
 class FmbApp(App):
     closing = False
@@ -37,11 +37,14 @@ class FmbApp(App):
         
         self.screenManager = ScreenManager()
         self.screenManager.transition = NoTransition()
+
         self.thumbnailView = ThumbnailView(name='ThumbnailView')
-        self.imageView = ImageView(name='ImageView')
-        self.image_editor = image_editor(name='image_editor')
         self.screenManager.add_widget(self.thumbnailView)
+        
+        self.imageView = ImageView(name='ImageView')
         self.screenManager.add_widget(self.imageView)
+
+        self.image_editor = image_editor(name='image_editor')                
         self.screenManager.add_widget(self.image_editor)
 
         return self.screenManager        

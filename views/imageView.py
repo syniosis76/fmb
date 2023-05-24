@@ -121,7 +121,7 @@ class ImageView(Screen):
         #endTime = time.process_time()
         #print(endTime - startTime)
 
-        #image.allow_stretch = True
+        #image.fit_mode = 'contain'
         image_grid.add_widget(image)   
            
     def showVideo(self, path):
@@ -138,7 +138,7 @@ class ImageView(Screen):
             video.bind(position=self.on_position_change)
             video.bind(duration=self.on_duration_change)
             video.bind(state=self.on_state_change)
-            video.allow_stretch = True
+            video.fit_mode = 'contain'
             self.currentVideo = video
             self.currentFrameRate = 30
 
