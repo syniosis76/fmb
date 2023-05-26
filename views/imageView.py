@@ -230,18 +230,26 @@ class ImageView(Screen):
         if self.currentVideo:
             video = self.currentVideo
             duration = video.duration
-            position = video.position
+            position = video.position            
             newPosition = position + seconds
 
-            if newPosition <= duration:
+            if newPosition < 0:
+                newPosition = 0
+            elif newPosition > duration:
+                newPosition = duration                        
+            
+            if newPosition < duration:
                 newPositionPercent = newPosition / duration
             else:
-                newPositionPercent = 1   
+                newPositionPercent = 1
 
-            if video.state in ('stop'):
-                video.state = 'play'
+            logging.info(f'Seek by {seconds:.2f}, Current {position:.2f} ({position / duration * 100:.2f}), New {newPosition:.2f} ({newPositionPercent * 100:.2f})')
 
-            video.seek(newPositionPercent, precise = False)
+            if abs(newPosition - position) > 0.1:
+                if video.state in ('stop'):
+                    video.state = 'play'
+
+                video.seek(newPositionPercent, precise = False)
 
     def videoNextFrame(self):
         if self.currentVideo:
