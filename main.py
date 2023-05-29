@@ -1,5 +1,3 @@
-from startup_config import window_height, window_width, window_left, window_top
-
 import utilities.loghandler
 
 import os
@@ -36,7 +34,12 @@ class FmbApp(App):
     def build(self):
         Window.clearcolor = (0.118, 0.118, 0.118, 1)
 
+        self.maximized = False
+
         Window.bind(on_request_close=self.window_request_close)
+        Window.bind(on_maximize=self.on_maximize)
+        Window.bind(on_minimize=self.on_minimize)
+        Window.bind(on_restore=self.on_restore)        
 
         self.data = Data()
         
@@ -61,26 +64,41 @@ class FmbApp(App):
         self.closing = True
         self.config.write()
 
-    def window_request_close(self, win):        
-        self.store_window_position()
+    def on_maximize(self, *largs):
+        self.maximized = True
+
+    def on_minimize(self, *largs):
+        self.maximized = True
+
+    def on_restore(self, *largs):
+        self.maximized = False
+
+    def window_request_close(self, win):                
+        self.store_window_position()    
         return False
-    
-    def build_config(self, config):
-        config.setdefaults('Window', {'width': window_width, 'height': window_height, 'top': window_top, 'left': window_left})
     
     def store_window_position(self):
         # Window.size is automatically adjusted for density, must divide by density when saving size        
-        self.config.set('Window', 'width', int(Window.size[0]/Metrics.density))
-        self.config.set('Window', 'height', int(Window.size[1]/Metrics.density))
-        self.config.set('Window', 'top', Window.top)
-        self.config.set('Window', 'left', Window.left)
+        window_position = self.data.window_position
+        window_position['width'] = int(Window.size[0]/Metrics.density)
+        window_position['height'] = int(Window.size[1]/Metrics.density)
+        window_position['top'] = Window.top
+        window_position['left'] = Window.left        
+        window_position['maximised'] = self.maximized
 
-    def restore_window_position(self):        
-        width = self.config.getdefault('Window', 'width', window_width)
-        height = self.config.getdefault('Window', 'height', window_height)
+        self.data.save()
+        
+    def restore_window_position(self):
+        window_position = self.data.window_position       
+        width = window_position.get('width', 800)
+        height = window_position.get('height', 600)
         Window.size = (int(width), int(height))
-        Window.top = int(self.config.getdefault('Window', 'top', window_top))
-        Window.left = int(self.config.getdefault('Window', 'left', window_left))
+        Window.top = int(window_position.get('top', 40))
+        Window.left = int(window_position.get('left', 40))
+
+        if window_position.get('maximised', False):
+            #Config.set('graphics', 'window_state', 'maximized')
+            Window.maximize()
 
 if __name__ == '__main__':
     FmbApp().run()

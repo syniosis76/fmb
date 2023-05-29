@@ -24,6 +24,7 @@ class Data():
   thumbnailHeight = cellHeight * thumbnailSize
   folderHeight = sp(30)
   videoThumbnailOverlay = None
+  window_position = {}
 
   def __init__(self):
     self.loadData()     
@@ -39,7 +40,8 @@ class Data():
         self.rootFolder = data.get('rootFolder', self.rootFolder)
         self.currentFolder = data.get('currentFolder', self.currentFolder)
         self.folders = data.get('folders', self.folders)        
-        self.foldersWidth = data.get('foldersWidth', self.foldersWidth)  
+        self.foldersWidth = data.get('foldersWidth', self.foldersWidth) 
+        self.window_position = data.get('window_position', self.window_position) 
 
   def save(self):
     data = {}
@@ -47,6 +49,7 @@ class Data():
     data['currentFolder'] = self.currentFolder
     data['folders'] = self.folders
     data['foldersWidth'] = self.foldersWidth
+    data['window_position'] = self.window_position
 
     os.makedirs(self.settingsPath, exist_ok=True)
 
@@ -66,4 +69,4 @@ class Data():
     self.save()
 
   def hasUpdated(self, version):
-    return self.version > version  
+    return self.version > version
