@@ -35,6 +35,8 @@ class ImageView(Screen):
         super(ImageView, self).__init__(**kwargs) 
         self.app = App.get_running_app()
         self.data = self.app.data
+        self.seeked_frames = 0
+        self.restart_position = None
         Window.bind(on_resize=self.on_window_resize)        
         Window.bind(on_key_down=self.on_key_down)
         Window.bind(on_key_up=self.on_key_up)
@@ -124,10 +126,10 @@ class ImageView(Screen):
         #image.fit_mode = 'contain'
         image_grid.add_widget(image)   
            
-    def showVideo(self, path):
+    def showVideo(self, path, restart=False):
         self.stopCurrentVideo()
 
-        if self.currentVideo != None:
+        if not restart and self.currentVideo != None:
             video = self.currentVideo
         else:
             self.clearImageWidget()         
@@ -138,11 +140,12 @@ class ImageView(Screen):
             video.bind(position=self.on_position_change)
             video.bind(duration=self.on_duration_change)
             video.bind(state=self.on_state_change)
+            video.bind(loaded=self.on_loaded)
             video.fit_mode = 'contain'
             self.currentVideo = video
             self.currentFrameRate = 30
 
-        try:    
+        try:
             video.source = path
         except Exception as e:
             logging.exception('Error Playing Video - %S', e)
@@ -202,11 +205,39 @@ class ImageView(Screen):
                 newstate = 'play'
             
             logging.info('Play/Pause ' + video.state + ' to ' + newstate)
+            
+            self.set_video_state(newstate)
             video.state = newstate
 
             return True
         
         return False
+
+    def set_video_state(self, state):
+        if self.currentVideo:
+            video = self.currentVideo
+            if video.state == 'pause' and state == 'play' and self.seeked_frames > 10:
+                self.restart_video(True) # resume
+            else:
+                video.state = state
+
+    def restart_video(self, resume):
+        if self.currentVideo:
+            self.seeked_frames = 0            
+
+            video = self.currentVideo
+                    
+            self.restart_position = video.position / video.duration
+
+            path = self.app.thumbnailView.currentFile.path
+            self.showVideo(path, True)
+
+    def on_loaded(self, object, value):
+        if value and self.currentVideo and self.restart_position != None:
+            restart_position = self.restart_position
+            self.restart_position = None
+            
+            self.currentVideo.seek(restart_position, precise = False)
 
     def edit_image(self):
         if not self.currentVideo:
@@ -252,7 +283,7 @@ class ImageView(Screen):
                 video.seek(newPositionPercent, precise = False)
 
     def videoNextFrame(self):
-        if self.currentVideo:
+        if self.currentVideo:            
             video = self.currentVideo
             if video.state == 'pause':
                 ffVideo = video._video
@@ -271,6 +302,7 @@ class ImageView(Screen):
                         ffVideo._trigger()
                 finally:
                     ffplayer.set_pause(True)
+                    self.seeked_frames += 1
 
     def video_extract_frame(self):
         if self.currentVideo:
