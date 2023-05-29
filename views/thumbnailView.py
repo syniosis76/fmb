@@ -48,19 +48,65 @@ class DraggableGridLayout(DraggableLayoutBehavior, GridLayout):
     def on_drag_complete(self):
         pass
 
-class ThumbnailImage(Image):
-    focused = False
-    selected = False
-    canvas_after_operations = []
+class ThumbnailImage(Image):    
+    def __init__(self, **kwargs):
+        super(ThumbnailImage, self).__init__(**kwargs)
+        self.focused = False
+        self.selected = False
+        self.outline_offset = None
+        self.outline_colour = None
+        self.outline_line = None
 
-    def add_canvas_after_operation(self, operation):
-        self.canvas_after_operations.append(operation)
-        self.canvas.after.add(operation)
+        self.bind(pos=self.set_pos_callback)
 
     def clear_canvas_after_operations(self):
-        while len(self.canvas_after_operations) > 0:
-            operation = self.canvas_after_operations.pop()
-            self.canvas.after.remove(operation)
+        logging.info(f'Clear Canvas After Operations for {self.mediaFile.name}')
+        
+        current_outline_line = self.outline_line
+        current_outline_colour = self.outline_colour
+
+        self.outline_offset = None
+        self.outline_colour = None
+        self.outline_line = None  
+        
+        if current_outline_line:
+            self.canvas.after.remove(current_outline_line)
+            
+        if current_outline_colour:
+            self.canvas.after.remove(current_outline_colour)                      
+
+    def show_selected(self):
+        self.selected = True            
+
+        self.clear_canvas_after_operations()
+
+        # Add blue outline.
+
+        width = self.size[0]
+        height = self.size[1]
+
+        imageWidth = self.texture_size[0]
+        imageHeight = self.texture_size[1]
+
+        x_offset = ((width - imageWidth) / 2)
+        y_offset = ((height - imageHeight) / 2)
+        
+        self.outline_offset = (x_offset, y_offset)
+        self.outline_colour = Color(0.207, 0.463, 0.839, mode='rgb')
+        self.outline_line = Line(width=sp(2), rectangle=(self.pos[0] + x_offset, self.pos[1] + y_offset, imageWidth, imageHeight))
+
+        self.canvas.after.add(self.outline_colour)
+        self.canvas.after.add(self.outline_line)
+
+    def hide_selected(self):
+        self.selected = False
+        self.clear_canvas_after_operations()
+
+    def set_pos_callback(self, obj, value):
+        if self.outline_line and self.outline_line.rectangle:
+            width = self.outline_line.rectangle[2]
+            height = self.outline_line.rectangle[3]
+            self.outline_line.rectangle = (self.pos[0] + self.outline_offset[0], self.pos[1] + self.outline_offset[1], width, height)
 
 class ThumbnailWidget(DraggableObjectBehavior, FloatLayout):    
     def __init__(self, **kwargs):
@@ -254,29 +300,12 @@ class ThumbnailView(Screen):
         if object and not object.selected:
             logging.info('Select ' + object.mediaFile.name)
 
-            object.selected = True            
-
-            object.clear_canvas_after_operations()
-
-            # Add blue outline.
-
-            width = object.size[0]
-            height = object.size[1]
-
-            imageWidth = object.texture_size[0]
-            imageHeight = object.texture_size[1]
-
-            x = object.pos[0] + ((width - imageWidth) / 2)
-            y = object.pos[1] + ((height - imageHeight) / 2)
-
-            object.add_canvas_after_operation(Color(0.207, 0.463, 0.839, mode='rgb'))
-            object.add_canvas_after_operation(Line(width=sp(2), rectangle=(x, y, imageWidth, imageHeight)))
+            object.show_selected()
 
     def hideSelected(self, object):
         if object and object.selected:
             logging.info('Deselect ' + object.mediaFile.name)           
-            object.selected = False            
-            object.clear_canvas_after_operations()
+            object.hide_selected()
 
     def clear_selected(self):        
         thumbnailGrid = self.ids.thumbnailGrid
@@ -428,6 +457,7 @@ class ThumbnailView(Screen):
                 file = image.mediaFile
                 self.deleteImage(image)
                 self.deleteFile(file)
+                currentIndex = index
 
         self.deleteComplete(currentIndex)
 
