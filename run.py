@@ -7,4 +7,4 @@ if sys.platform=="win32":
 import main
 
 if __name__ == '__main__':
-    main.FmbApp().run()
+    main.fmb_app().run()

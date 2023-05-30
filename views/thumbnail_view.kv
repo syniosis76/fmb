@@ -5,7 +5,7 @@
   background_down: 'images\\button-down.png'
   border: (2, 2, 2, 2)        
 
-<ThumbnailView>:
+<thumbnail_view>:
   BoxLayout:    
     BoxLayout:
       orientation: 'vertical'
@@ -52,7 +52,7 @@
         scroll_type: ['bars']
         DraggableGridLayout:
           id: thumbnailGrid
-          drag_classes: ['thumbnailLayout']
+          drag_classes: ['thumbnail_layout']
           cols: 1
           on_drag_complete: root.on_drag_complete()
         

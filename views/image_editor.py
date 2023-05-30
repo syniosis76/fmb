@@ -61,8 +61,8 @@ class image_editor(Screen):
         self.pause_update = False
 
     def load_image(self):
-        if self.app.thumbnailView.currentFile:
-            path = self.app.thumbnailView.currentFile.path                        
+        if self.app.thumbnail_view.currentFile:
+            path = self.app.thumbnail_view.currentFile.path                        
 
             self.base_image = PILImage.open(path)        
             orientation = exifhandler.get_orientation(self.base_image)
@@ -177,7 +177,7 @@ class image_editor(Screen):
     
     def on_key_down(self, window, keycode, text, modifiers, x):        
         if self.manager.current == self.name:
-            #print('ImageView Key Down: ' + str(keycode))
+            #print('image_view Key Down: ' + str(keycode))
             # Navigation
             if keycode == Keyboard.keycodes['escape']:
                 self.go_back()
@@ -192,12 +192,12 @@ class image_editor(Screen):
         #    print('ImagveView Key Up: ' + str(keycode))
 
     def go_back(self):
-        self.app.imageView.no_back = True
+        self.app.image_view.no_back = True
 
         self.clear_editor_image()        
 
         self.manager.transition.direction = 'right'
-        self.manager.current = 'ImageView'
+        self.manager.current = 'image_view'
 
     def set_ratio(self, ratio):
         self.parameters.ratio = ratio
@@ -325,7 +325,7 @@ class image_editor(Screen):
             image = transform_image.transform(image, size, self.parameters)                                                
             image = transform_image.apply_adjustment(image, self.parameters)
 
-            path = self.app.thumbnailView.currentFile.path
+            path = self.app.thumbnail_view.currentFile.path
             parts = os.path.splitext(path)
             suffixNumber = 1
             while (True):
@@ -335,13 +335,13 @@ class image_editor(Screen):
                 suffixNumber = suffixNumber + 1                       
 
             image.save(frame_path)
-            self.app.thumbnailView.insertThumbnail(frame_path)
+            self.app.thumbnail_view.insertThumbnail(frame_path)
             
             save_label = self.ids.save_label
             save_label.text = 'Saved'
             self.fadeOutAnimation.start(self.ids.save_label)
 
-            self.app.thumbnailView.trigger_save_layout()
+            self.app.thumbnail_view.trigger_save_layout()
     
     def adjustment_undo_redo(self):
         if self.previous_adjustment == None:            

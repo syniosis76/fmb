@@ -18,13 +18,13 @@ import logging
 from utilities import video_frame
 from utilities import exifhandler
 
-Builder.load_file('views/imageView.kv')
+Builder.load_file('views/image_view.kv')
 
-class FmbVideo(Video):
+class fmb_video(Video):
     def texture_update(self, *largs):
         pass
 
-class ImageView(Screen):
+class image_view(Screen):
     app = None
     data = None
     currentVideo = None
@@ -32,7 +32,7 @@ class ImageView(Screen):
     no_back = False
 
     def __init__(self, **kwargs):
-        super(ImageView, self).__init__(**kwargs) 
+        super(image_view, self).__init__(**kwargs) 
         self.app = App.get_running_app()
         self.data = self.app.data
         self.seeked_frames = 0
@@ -42,14 +42,14 @@ class ImageView(Screen):
         Window.bind(on_key_up=self.on_key_up)
         Window.bind(mouse_pos=self.on_mouse_pos)
 
-        self.setupButtons()
+        self.setup_buttons()
 
-        fadeInDuration = 0.5
-        fadeOutDuration = 1.0
-        fadeTimoutDuration = 3.0
-        self.fadeInAnimation = Animation(opacity=0.8, duration=fadeInDuration)               
-        self.fadeOutAnimation = Animation(opacity=0, duration=fadeOutDuration)
-        self.fadeOutTrigger = Clock.create_trigger(self.onFadeOutTrigger, timeout=fadeTimoutDuration, interval=False, release_ref=False)
+        fade_in_duration = 0.5
+        fade_out_duration = 1.0
+        fade_timout_duration = 3.0
+        self.fade_in_animation = Animation(opacity=0.8, duration=fade_in_duration)               
+        self.fade_out_animation = Animation(opacity=0, duration=fade_out_duration)
+        self.fade_out_trigger = Clock.create_trigger(self.onFadeOutTrigger, timeout=fade_timout_duration, interval=False, release_ref=False)
 
     # Reload the Image on resize to scale to fit.
     def on_window_resize(self, window, width, height):
@@ -61,8 +61,8 @@ class ImageView(Screen):
         self.fadeInOverlay()
 
     def loadMedia(self):
-        if self.app.thumbnailView.currentFile:
-            path = self.app.thumbnailView.currentFile.path
+        if self.app.thumbnail_view.currentFile:
+            path = self.app.thumbnail_view.currentFile.path
 
             parts = os.path.splitext(path)
             if len(parts) == 2:
@@ -135,7 +135,7 @@ class ImageView(Screen):
             self.clearImageWidget()         
             image_grid = self.ids.image_grid
         
-            video = FmbVideo()
+            video = fmb_video()
             image_grid.add_widget(video)       
             video.bind(position=self.on_position_change)
             video.bind(duration=self.on_duration_change)
@@ -180,12 +180,12 @@ class ImageView(Screen):
             self.clearImage()
 
             self.manager.transition.direction = 'right'
-            self.manager.current = 'ThumbnailView'
+            self.manager.current = 'thumbnail_view'
 
         return True
 
     def changeImage(self, offset):        
-        if self.app.thumbnailView.changeImage(offset):
+        if self.app.thumbnail_view.changeImage(offset):
             self.loadMedia()
 
     def previousImage(self):
@@ -229,7 +229,7 @@ class ImageView(Screen):
                     
             self.restart_position = video.position / video.duration
 
-            path = self.app.thumbnailView.currentFile.path
+            path = self.app.thumbnail_view.currentFile.path
             self.showVideo(path, True)
 
     def on_loaded(self, object, value):
@@ -254,7 +254,7 @@ class ImageView(Screen):
         return False
     
     def delete(self):
-        self.app.thumbnailView.delete_current()
+        self.app.thumbnail_view.delete_current()
         self.loadMedia()
 
     def videoSeekBySeconds(self, seconds):
@@ -312,7 +312,7 @@ class ImageView(Screen):
                 frame = ff_video._next_frame
                 image = video_frame.get_frame_image(frame[0])
 
-                path = self.app.thumbnailView.currentFile.path
+                path = self.app.thumbnail_view.currentFile.path
 
                 parts = os.path.splitext(path)
                 extension = parts[1].lower()
@@ -325,7 +325,7 @@ class ImageView(Screen):
                     suffixNumber = suffixNumber + 1
 
                 image.save(frame_path, format='jpeg')
-                self.app.thumbnailView.insertThumbnail(frame_path)
+                self.app.thumbnail_view.insertThumbnail(frame_path)
 
 
     def on_position_change(self, instance, value):
@@ -344,21 +344,21 @@ class ImageView(Screen):
             
     
     def fadeOutOverlay(self):        
-        if self.manager.current == 'ImageView' and self.ids.overlay.opacity > 0 and not self.fadeOutAnimation.have_properties_to_animate(self.ids.overlay):            
-            self.fadeInAnimation.cancel(self.ids.overlay)
-            self.fadeOutAnimation.start(self.ids.overlay)
+        if self.manager.current == 'ImageView' and self.ids.overlay.opacity > 0 and not self.fade_out_animation.have_properties_to_animate(self.ids.overlay):            
+            self.fade_in_animation.cancel(self.ids.overlay)
+            self.fade_out_animation.start(self.ids.overlay)
             Window.show_cursor = False
     
     def fadeInOverlay(self):
         self.startOverlayTimeout()
-        if self.ids.overlay.opacity < 0.8 and not self.fadeInAnimation.have_properties_to_animate(self.ids.overlay):            
-            self.fadeOutAnimation.cancel(self.ids.overlay)
-            self.fadeInAnimation.start(self.ids.overlay)
+        if self.ids.overlay.opacity < 0.8 and not self.fade_in_animation.have_properties_to_animate(self.ids.overlay):            
+            self.fade_out_animation.cancel(self.ids.overlay)
+            self.fade_in_animation.start(self.ids.overlay)
             Window.show_cursor = True
 
     def startOverlayTimeout(self):
-        self.fadeOutTrigger.cancel()
-        self.fadeOutTrigger()
+        self.fade_out_trigger.cancel()
+        self.fade_out_trigger()
 
     def onFadeOutTrigger(self, *args):
         self.fadeOutOverlay()
@@ -366,7 +366,7 @@ class ImageView(Screen):
     def on_mouse_pos(self, *args):
         self.fadeInOverlay()
 
-    def setupButtons(self):
+    def setup_buttons(self):
         self.buttons = [(self.ids.back_button, self.go_back)
             , (self.ids.previous_button, self.previousImage)
             , (self.ids.next_button, self.nextImage)
@@ -401,7 +401,7 @@ class ImageView(Screen):
 
     def on_key_down(self, window, keycode, text, modifiers, x):        
         if self.manager.current == self.name:
-            #print('ImageView Key Down: ' + str(keycode))
+            #print('image_view Key Down: ' + str(keycode))
             # Navigation
             if keycode == Keyboard.keycodes['escape']:
                 self.go_back()            

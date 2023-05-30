@@ -48,9 +48,9 @@ class DraggableGridLayout(DraggableLayoutBehavior, GridLayout):
     def on_drag_complete(self):
         pass
 
-class ThumbnailImage(Image):    
+class thumbnail_image(Image):    
     def __init__(self, **kwargs):
-        super(ThumbnailImage, self).__init__(**kwargs)
+        super(thumbnail_image, self).__init__(**kwargs)
         self.focused = False
         self.selected = False
         self.outline_offset = None
@@ -108,13 +108,13 @@ class ThumbnailImage(Image):
             height = self.outline_line.rectangle[3]
             self.outline_line.rectangle = (self.pos[0] + self.outline_offset[0], self.pos[1] + self.outline_offset[1], width, height)
 
-class ThumbnailWidget(DraggableObjectBehavior, FloatLayout):    
+class thumbnail_widget(DraggableObjectBehavior, FloatLayout):    
     def __init__(self, **kwargs):
-        super(ThumbnailWidget, self).__init__(**kwargs, drag_controller=drag_controller)
+        super(thumbnail_widget, self).__init__(**kwargs, drag_controller=drag_controller)
 
-Builder.load_file('views/thumbnailView.kv')
+Builder.load_file('views/thumbnail_view.kv')
 
-class ThumbnailView(Screen):
+class thumbnail_view(Screen):
     app = None
     data = None
     columns = 1
@@ -128,7 +128,7 @@ class ThumbnailView(Screen):
     keyboard_modifiers = []
 
     def __init__(self, **kwargs):
-        super(ThumbnailView, self).__init__(**kwargs)
+        super(thumbnail_view, self).__init__(**kwargs)
         self.app = App.get_running_app()
         self.data = self.app.data
         self.version = 0
@@ -143,19 +143,19 @@ class ThumbnailView(Screen):
             Clock.schedule_once(lambda x: self.buildUi(), 0.1)
 
     def on_window_resize(self, window, width, height):
-        self.updateThumbnailGridSize(width)
-        self.updateFolderGridSize()
+        self.update_thumbnail_grid_size(width)
+        self.update_folder_grid_size()
 
     def changePath(self, path):
         self.data.currentFolder = path
-        self.showThumbnails()
+        self.show_thumbnails()
         self.data.save()
 
     def buildUi(self):
-        self.showThumbnails()
-        self.showFolders()
+        self.show_thumbnails()
+        self.show_folders()
 
-    def showThumbnails(self):
+    def show_thumbnails(self):
         if self.thread and not self.cancel_thread.is_set():
             logging.info('Thread Cancel')
             self.cancel_thread.set()
@@ -164,16 +164,16 @@ class ThumbnailView(Screen):
             logging.info('Thread Complete')
             self.thread = None
 
-        Clock.schedule_once(lambda dt: self.showThumbnailsSchedule())
+        Clock.schedule_once(lambda dt: self.show_thumbnails_schedule())
 
-    def showThumbnailsSchedule(self):
+    def show_thumbnails_schedule(self):
         thumbnailGrid = self.ids.thumbnailGrid
         thumbnailGrid.clear_widgets()
         self.cancel_thread.clear()
-        self.thread = threading.Thread(target=self.showThumbnailsThread)
+        self.thread = threading.Thread(target=self.show_thumbnails_thread)
         self.thread.start()
 
-    def showThumbnailsThread(self):
+    def show_thumbnails_thread(self):
         self.version = self.data.version
 
         added_files = []
@@ -215,7 +215,7 @@ class ThumbnailView(Screen):
                     thumbnail.initialiseThumbnail()
                     mediaFile.thumbnailPath = thumbnail.thumbnailPath
                     coreImage = CoreImage(thumbnail.thumbnailPath)
-                    self.addThumbnail(thumbnailGrid, mediaFile, coreImage, None)
+                    self.add_thumbnail(thumbnailGrid, mediaFile, coreImage, None)
 
         # Load any new files from disk
         self.folder.loadPath(path)
@@ -255,20 +255,20 @@ class ThumbnailView(Screen):
         return False
 
     @mainthread
-    def addThumbnail(self, thumbnailGrid, mediaFile, coreImage, index):
+    def add_thumbnail(self, thumbnailGrid, mediaFile, coreImage, index):
         logging.info('Thumbnail - ' + mediaFile.name)
-        thumbnailWidget = ThumbnailWidget()
-        thumbnailWidget.drag_cls = 'thumbnailLayout'
-        thumbnailWidget.bind(on_touch_down = self.thumbnailTouchDown)
-        thumbnailWidget.thumbnailView = self
+        thumbnailWidget = thumbnail_widget()
+        thumbnailWidget.drag_cls = 'thumbnail_layout'
+        thumbnailWidget.bind(on_touch_down = self.thumbnail_touch_down)
+        thumbnailWidget.thumbnail_view = self
 
-        thumbnailImage = ThumbnailImage()
-        thumbnailWidget.drag_cls = 'thumbnailLayout'
+        thumbnailImage = thumbnail_image()
+        thumbnailWidget.drag_cls = 'thumbnail_layout'
         thumbnailImage.texture = coreImage.texture
         thumbnailImage.pos_hint = {'x': self.data.marginSize, 'y': self.data.marginSize}
         thumbnailImage.size_hint = (self.data.thumbnailSize, self.data.thumbnailSize)
         thumbnailImage.mediaFile = mediaFile
-        thumbnailImage.bind(pos = self.thumbnailPosChanged)
+        thumbnailImage.bind(pos = self.thumbnail_pos_changed)
 
         thumbnailWidget.add_widget(thumbnailImage)
         if index == None:
@@ -279,13 +279,13 @@ class ThumbnailView(Screen):
         if self.currentIndex:
             self.currentIndex = self.currentIndex + 1
 
-        self.updateThumbnailGridSize(Window.width)
+        self.update_thumbnail_grid_size(Window.width)
 
         #logging.info('Adding Complete - ' + mediaFile.name)
 
         return mediaFile.name
 
-    def insertThumbnail(self, frame_path):
+    def insert_thumbnail(self, frame_path):
         thumbnailGrid = self.ids.thumbnailGrid
 
         file = MediaFile(frame_path)
@@ -296,13 +296,13 @@ class ThumbnailView(Screen):
         self.addThumbnail(thumbnailGrid, file, coreImage, self.currentIndex)
 
 
-    def showSelected(self, object):
+    def show_selected(self, object):
         if object and not object.selected:
             logging.info('Select ' + object.mediaFile.name)
 
             object.show_selected()
 
-    def hideSelected(self, object):
+    def hide_selected(self, object):
         if object and object.selected:
             logging.info('Deselect ' + object.mediaFile.name)           
             object.hide_selected()
@@ -314,13 +314,13 @@ class ThumbnailView(Screen):
         for index in range(length - 1, -1, -1):
             widget = thumbnailGrid.children[index]
             image = widget.children[0]
-            self.hideSelected(image)
+            self.hide_selected(image)
 
-    def thumbnailPosChanged(self, object, pos):
+    def thumbnail_pos_changed(self, object, pos):
         if object == self.currentImage:
-            self.showSelected(object)
+            self.show_selected(object)
 
-    def updateThumbnailGridSize(self, width):
+    def update_thumbnail_grid_size(self, width):
         thumbnailGrid = self.ids.thumbnailGrid
         thumbnailGridWidth = width - sp(self.data.foldersWidth)
         self.columns = int(thumbnailGridWidth / self.data.cellWidth)
@@ -335,16 +335,16 @@ class ThumbnailView(Screen):
         if thumbnailGrid.height != newHeight:
             thumbnailGrid.height = newHeight
 
-    def getWidgetAt(self, x, y):
+    def get_widget_at(self, x, y):
         thumbnailGrid = self.ids.thumbnailGrid
         for widget in thumbnailGrid.children:
             if widget.collide_point(x, y):
                 return widget
         return None
 
-    def thumbnailTouchDown(self, instance, touch):
+    def thumbnail_touch_down(self, instance, touch):
         if touch.grab_current == None:
-            widget = self.getWidgetAt(touch.x, touch.y)
+            widget = self.get_widget_at(touch.x, touch.y)
             if widget:
                 image = widget.children[0]
 
@@ -363,13 +363,13 @@ class ThumbnailView(Screen):
                         self.currentImage = image
                         self.currentFile = image.mediaFile
 
-                        self.showSelected(image)
+                        self.show_selected(image)
 
                         if touch.is_double_tap:
                             self.manager.transition.direction = 'left'
-                            self.manager.current = 'ImageView'
+                            self.manager.current = 'image_view'
 
-                    super(ThumbnailWidget, widget).on_touch_down(touch)
+                    super(thumbnail_widget, widget).on_touch_down(touch)
 
                     return True
 
@@ -385,7 +385,7 @@ class ThumbnailView(Screen):
         for select_index in range(start_index, end_index + 1):
             select_widget = thumbnailGrid.children[select_index]
             select_image = select_widget.children[0]
-            self.showSelected(select_image)
+            self.show_selected(select_image)
 
         # Focus the selected item
         current_widget = thumbnailGrid.children[selected_index]
@@ -394,7 +394,7 @@ class ThumbnailView(Screen):
         self.currentImage = current_image
         self.currentFile = current_image.mediaFile
 
-    def changeImage(self, offset):
+    def change_image(self, offset):
         thumbnailGrid = self.ids.thumbnailGrid
 
         if len(thumbnailGrid.children) == 0:
@@ -417,7 +417,7 @@ class ThumbnailView(Screen):
 
         return False
 
-    def selectImage(self, newIndex, force=False):
+    def select_image(self, newIndex, force=False):
         thumbnailGrid = self.ids.thumbnailGrid
 
         if newIndex < 0:
@@ -435,7 +435,7 @@ class ThumbnailView(Screen):
             self.currentImage = image
             self.currentFile = image.mediaFile
 
-            self.showSelected(image)
+            self.show_selected(image)
 
             return True
 
@@ -443,9 +443,9 @@ class ThumbnailView(Screen):
 
     def delete(self):
         if self.currentImage:
-            threading.Thread(target=(lambda: self.deleteThread())).start()
+            threading.Thread(target=(lambda: self.delete_thread())).start()
 
-    def deleteThread(self):
+    def delete_thread(self):
         currentIndex = self.currentIndex
         thumbnailGrid = self.ids.thumbnailGrid
         length = len(thumbnailGrid.children)
@@ -455,23 +455,23 @@ class ThumbnailView(Screen):
             image = widget.children[0]
             if image.selected:
                 file = image.mediaFile
-                self.deleteImage(image)
-                self.deleteFile(file)
+                self.delete_image(image)
+                self.delete_file(file)
                 currentIndex = index
 
-        self.deleteComplete(currentIndex)
+        self.delete_complete(currentIndex)
 
     @mainthread
-    def deleteImage(self, image):
+    def delete_image(self, image):
         widget = image.parent
         self.ids.thumbnailGrid.remove_widget(widget)
 
-    def deleteFile(self, file):
+    def delete_file(self, file):
         os.remove(file.thumbnailPath)
         send2trash(file.path)
 
     @mainthread
-    def deleteComplete(self, index):
+    def delete_complete(self, index):
         self.selectImage(index - 1, True) # Select the next image.
         self.trigger_save_layout()
 
@@ -490,12 +490,12 @@ class ThumbnailView(Screen):
         os.remove(file.thumbnailPath)
         send2trash(file.path)
 
-    def openHomeFolderClick(self):
+    def open_home_folder_click(self):
         self.data.rootFolder = ''
         self.showFolders()
         self.data.save()
 
-    def openParentFolderClick(self):
+    def open_parent_folder_click(self):
         parentFolder = os.path.dirname(self.data.rootFolder)
         if parentFolder == self.data.rootFolder or not os.path.exists(parentFolder):
             parentFolder = ''
@@ -503,11 +503,11 @@ class ThumbnailView(Screen):
         self.showFolders()
         self.data.save()
 
-    def onSelectRootFolder(self, selection):
+    def on_select_root_folder(self, selection):
         if selection:
             self.showRootFolder(selection[0])
 
-    def showRootFolder(self, path):
+    def show_root_folder(self, path):
         self.data.rootFolder = path
         self.data.currentFolder = path
         self.showFolders()
@@ -518,7 +518,7 @@ class ThumbnailView(Screen):
         if self.manager.current == self.name:
             self.add_keyboard_modifier(keycode)
 
-            #logging.info('ThumbnailView Key Down: ' + str(keycode))
+            #logging.info('thumbnail_view Key Down: ' + str(keycode))
             if keycode == Keyboard.keycodes['right']:
                 self.changeImage(-1)
             elif keycode == Keyboard.keycodes['left']:
@@ -533,7 +533,7 @@ class ThumbnailView(Screen):
                 self.changeImage(-1000000) # Big negative number will stop at the last image (0 index).
             elif keycode == Keyboard.keycodes['enter']:
                 self.manager.transition.direction = 'left'
-                self.manager.current = 'ImageView'
+                self.manager.current = 'image_view'
             elif keycode == Keyboard.keycodes['delete']:
                 self.delete()
             elif keycode == Keyboard.keycodes['f11']:
@@ -542,7 +542,7 @@ class ThumbnailView(Screen):
     def on_key_up(self, window, keycode, text):
         if self.manager.current == self.name:
             self.remove_keyboard_modifier(keycode)
-            #logging.info('ThumbnailView Key Up: ' + str(keycode))
+            #logging.info('thumbnail_view Key Up: ' + str(keycode))
 
     def add_keyboard_modifier(self, keycode):
         modifiers = self.get_keycode_modifiers(keycode)
@@ -571,9 +571,9 @@ class ThumbnailView(Screen):
     def showFolders(self):
         folderGrid = self.ids.folderGrid
         folderGrid.clear_widgets()
-        threading.Thread(target=self.showFoldersThread).start()
+        threading.Thread(target=self.show_folders_thread).start()
 
-    def showFoldersThread(self):
+    def show_folders_thread(self):
         path = self.data.rootFolder
         folders = []
         if self.data.rootFolder == '':
@@ -610,29 +610,29 @@ class ThumbnailView(Screen):
         for (path, name) in folders:
             if self.app.closing:
                 break
-            self.addFolder(folderGrid, path, name)
+            self.add_folder(folderGrid, path, name)
 
     @mainthread
-    def addFolder(self, foldersGrid, path, name):
+    def add_folder(self, foldersGrid, path, name):
         button = Button()
         button.text = name
         button.fmbPath = path
         button.size_hint = (1, None)
         button.height = self.data.folderHeight
-        button.bind(on_press = self.folderButtonClick)
+        button.bind(on_press = self.folder_button_click)
 
         foldersGrid.add_widget(button)
 
-        self.updateFolderGridSize()
+        self.update_folder_grid_size()
 
-    def updateFolderGridSize(self):
+    def update_folder_grid_size(self):
         foldersGrid = self.ids.folderGrid
         rows = len(foldersGrid.children)
         newHeight = self.data.folderHeight * rows
         if foldersGrid.height != newHeight:
             foldersGrid.height = newHeight
 
-    def folderButtonClick(self, widget):
+    def folder_button_click(self, widget):
         if widget.last_touch.is_double_tap:
             self.showRootFolder(widget.fmbPath)
         else:

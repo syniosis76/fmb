@@ -18,17 +18,17 @@ from kivy.core.window import Window
 
 from models.data import Data
 
-from views.thumbnailView import ThumbnailView
-from views.imageView import ImageView
+from views.thumbnail_view import thumbnail_view
+from views.image_view import image_view
 from views.image_editor import image_editor
 
 from kivy.logger import Logger, LOG_LEVELS
 Logger.setLevel(LOG_LEVELS["info"]) # trace, debug, info, warning, error, critical
 
-class FmbApp(App):
+class fmb_app(App):
     closing = False
-    thumbnailView = None
-    imageView = None
+    thumbnail_view = None
+    image_view = None
     image_editor = None
 
     def build(self):
@@ -46,11 +46,11 @@ class FmbApp(App):
         self.screenManager = ScreenManager()
         self.screenManager.transition = NoTransition()
 
-        self.thumbnailView = ThumbnailView(name='ThumbnailView')
-        self.screenManager.add_widget(self.thumbnailView)
+        self.thumbnail_view = thumbnail_view(name='thumbnail_view')
+        self.screenManager.add_widget(self.thumbnail_view)
         
-        self.imageView = ImageView(name='ImageView')
-        self.screenManager.add_widget(self.imageView)
+        self.image_view = image_view(name='image_view')
+        self.screenManager.add_widget(self.image_view)
 
         self.image_editor = image_editor(name='image_editor')                
         self.screenManager.add_widget(self.image_editor)
@@ -97,8 +97,7 @@ class FmbApp(App):
         Window.left = int(window_position.get('left', 40))
 
         if window_position.get('maximised', False):
-            #Config.set('graphics', 'window_state', 'maximized')
             Window.maximize()
 
 if __name__ == '__main__':
-    FmbApp().run()
+    fmb_app().run()
