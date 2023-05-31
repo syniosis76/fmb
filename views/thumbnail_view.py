@@ -234,7 +234,7 @@ class thumbnail_view(Screen):
                 thumbnail.initialiseThumbnail()
                 file.thumbnailPath = thumbnail.thumbnailPath
                 coreImage = CoreImage(thumbnail.thumbnailPath)
-                self.addThumbnail(thumbnailGrid, file, coreImage, None)
+                self.add_thumbnail(thumbnailGrid, file, coreImage, None)
 
         self.version = self.data.version
 
@@ -293,7 +293,7 @@ class thumbnail_view(Screen):
         thumbnail.initialiseThumbnail()
         file.thumbnailPath = thumbnail.thumbnailPath
         coreImage = CoreImage(thumbnail.thumbnailPath)
-        self.addThumbnail(thumbnailGrid, file, coreImage, self.currentIndex)
+        self.add_thumbnail(thumbnailGrid, file, coreImage, self.currentIndex)
 
 
     def show_selected(self, object):
@@ -413,7 +413,7 @@ class thumbnail_view(Screen):
             else:
                 self.shift_index = None
 
-            return self.selectImage(newIndex)
+            return self.select_image(newIndex)
 
         return False
 
@@ -472,7 +472,7 @@ class thumbnail_view(Screen):
 
     @mainthread
     def delete_complete(self, index):
-        self.selectImage(index - 1, True) # Select the next image.
+        self.select_image(index - 1, True) # Select the next image.
         self.trigger_save_layout()
 
     def delete_current(self):
@@ -482,7 +482,7 @@ class thumbnail_view(Screen):
             widget = self.currentImage.parent
             thumbnailGrid = self.ids.thumbnailGrid
             thumbnailGrid.remove_widget(widget)
-            self.selectImage(self.currentIndex - 1, True) # Select the next image.            
+            self.select_image(self.currentIndex - 1, True) # Select the next image.            
             threading.Thread(target=(lambda: self.delete_current_thread(file))).start()
             self.trigger_save_layout()        
     
@@ -492,7 +492,7 @@ class thumbnail_view(Screen):
 
     def open_home_folder_click(self):
         self.data.rootFolder = ''
-        self.showFolders()
+        self.show_folders()
         self.data.save()
 
     def open_parent_folder_click(self):
@@ -500,18 +500,18 @@ class thumbnail_view(Screen):
         if parentFolder == self.data.rootFolder or not os.path.exists(parentFolder):
             parentFolder = ''
         self.data.rootFolder = parentFolder
-        self.showFolders()
+        self.show_folders()
         self.data.save()
 
     def on_select_root_folder(self, selection):
         if selection:
-            self.showRootFolder(selection[0])
+            self.show_root_folder(selection[0])
 
     def show_root_folder(self, path):
         self.data.rootFolder = path
         self.data.currentFolder = path
-        self.showFolders()
-        self.showThumbnails()
+        self.show_folders()
+        self.show_thumbnails()
         self.data.save()
 
     def on_key_down(self, window, keycode, text, modifiers, x):
@@ -520,17 +520,17 @@ class thumbnail_view(Screen):
 
             #logging.info('thumbnail_view Key Down: ' + str(keycode))
             if keycode == Keyboard.keycodes['right']:
-                self.changeImage(-1)
+                self.change_image(-1)
             elif keycode == Keyboard.keycodes['left']:
-                self.changeImage(1)
+                self.change_image(1)
             elif keycode == Keyboard.keycodes['down']:
-                self.changeImage(-self.columns)
+                self.change_image(-self.columns)
             elif keycode == Keyboard.keycodes['up']:
-                self.changeImage(self.columns)
+                self.change_image(self.columns)
             elif keycode in [Keyboard.keycodes['home']]:
-                self.changeImage(1000000) # Big number will stop at the first image (highest index).
+                self.change_image(1000000) # Big number will stop at the first image (highest index).
             elif keycode in [Keyboard.keycodes['end']]:
-                self.changeImage(-1000000) # Big negative number will stop at the last image (0 index).
+                self.change_image(-1000000) # Big negative number will stop at the last image (0 index).
             elif keycode == Keyboard.keycodes['enter']:
                 self.manager.transition.direction = 'left'
                 self.manager.current = 'image_view'
@@ -568,7 +568,7 @@ class thumbnail_view(Screen):
 
         return []
 
-    def showFolders(self):
+    def show_folders(self):
         folderGrid = self.ids.folderGrid
         folderGrid.clear_widgets()
         threading.Thread(target=self.show_folders_thread).start()
@@ -634,7 +634,7 @@ class thumbnail_view(Screen):
 
     def folder_button_click(self, widget):
         if widget.last_touch.is_double_tap:
-            self.showRootFolder(widget.fmbPath)
+            self.show_root_folder(widget.fmbPath)
         else:
             self.changePath(widget.fmbPath)
 

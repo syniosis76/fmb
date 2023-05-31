@@ -62,7 +62,6 @@ class fmb_app(App):
 
     def on_stop(self):
         self.closing = True
-        self.config.write()
 
     def on_maximize(self, *largs):
         self.maximized = True
