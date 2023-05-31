@@ -1,4 +1,3 @@
-import logging
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
@@ -19,6 +18,7 @@ from send2trash import send2trash
 import os
 import threading
 import json
+import logging
 
 from models.folder import Folder
 from models.mediafile import MediaFile
@@ -362,6 +362,7 @@ class thumbnail_view(Screen):
                         self.currentIndex = thumbnailGrid.children.index(widget)
                         self.currentImage = image
                         self.currentFile = image.mediaFile
+                        self.update_title()
 
                         self.show_selected(image)
 
@@ -393,6 +394,7 @@ class thumbnail_view(Screen):
         self.currentIndex = selected_index
         self.currentImage = current_image
         self.currentFile = current_image.mediaFile
+        self.update_title()
 
     def change_image(self, offset):
         thumbnailGrid = self.ids.thumbnailGrid
@@ -434,6 +436,7 @@ class thumbnail_view(Screen):
             image = thumbnailWidget.children[0]
             self.currentImage = image
             self.currentFile = image.mediaFile
+            self.update_title()
 
             self.show_selected(image)
 
@@ -680,5 +683,11 @@ class thumbnail_view(Screen):
             with open(self.data.settings_file_name, 'r') as file:
                 return json.load(file)
         return None
+    
+    def update_title(self):
+        if self.currentFile and self.currentFile.path:
+            self.app.title = self.app.app_title + ' - ' + self.currentFile.path
+        else:
+            self.app.title = self.app.app_title
 
 

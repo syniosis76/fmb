@@ -17,6 +17,7 @@ import logging
 
 from utilities import video_frame
 from utilities import exifhandler
+from utilities import ffmpeg_tools
 
 Builder.load_file('views/image_view.kv')
 
@@ -29,7 +30,7 @@ class image_view(Screen):
     data = None
     current_video = None
     currentFrameRate = None
-    no_back = False
+    no_back = False    
 
     def __init__(self, **kwargs):
         super(image_view, self).__init__(**kwargs) 
@@ -37,6 +38,10 @@ class image_view(Screen):
         self.data = self.app.data
         self.seeked_frames = 0
         self.restart_position = None
+
+        self.video_trim_start = None
+        self.video_trim_end = None
+
         Window.bind(on_resize=self.on_window_resize)        
         Window.bind(on_key_down=self.on_key_down)
         Window.bind(on_key_up=self.on_key_up)
@@ -147,13 +152,16 @@ class image_view(Screen):
 
         try:
             video.source = path
-        except Exception as e:
-            logging.exception('Error Playing Video - %S', e)
-        
-        self.ids.edit_button.opacity = 0
-        self.ids.video_controls.opacity = 1
 
-        video.state = 'play'    
+            self.video_trim_start = None
+            self.video_trim_end = None
+
+            self.ids.edit_button.opacity = 0
+            self.ids.video_controls.opacity = 1
+
+            video.state = 'play' 
+        except Exception as e:
+            logging.exception('Error Playing Video - %S', e)                   
 
     def clear_image_widget(self):
         image_grid = self.ids.image_grid
@@ -315,7 +323,6 @@ class image_view(Screen):
                 path = self.app.thumbnail_view.currentFile.path
 
                 parts = os.path.splitext(path)
-                extension = parts[1].lower()
 
                 suffixNumber = 1
                 while (True):
@@ -325,21 +332,43 @@ class image_view(Screen):
                     suffixNumber = suffixNumber + 1
 
                 image.save(frame_path, format='jpeg')
-                self.app.thumbnail_view.insertThumbnail(frame_path)
+                self.app.thumbnail_view.insert_thumbnail(frame_path)
 
-    def video_extract_current_section(self):
+    def video_set_trim_start(self):
         if self.current_video:
             video = self.current_video
-            start = video.posotion # Todo - Set Markers
-            end = start + 5
-            self.video_extract_section(start, end)
+            self.video_trim_start = video.position
+
+    def video_set_trim_end(self):
+        if self.current_video:            
+            video = self.current_video
+            self.video_trim_end = video.position
+
+    def video_trim(self):
+        if self.current_video and self.video_trim_start and self.video_trim_end:
+            self.video_extract_section(self.video_trim_start, self.video_trim_end)
 
     def video_extract_section(self, start, end):
         if self.current_video:
-            video = self.current_video
-            #if video.state == 'pause':
+            source = self.app.thumbnail_view.currentFile.path
 
+            parts = os.path.splitext(source)
+            extension = parts[1].lower()
 
+            suffixNumber = 1
+            while (True):
+                target = parts[0] + ' ' + str(suffixNumber) + extension
+                if not os.path.exists(target):
+                    break
+                suffixNumber = suffixNumber + 1
+
+            logging.info(f'Trim Video {source} from {start} to {end}.')
+
+            ffmpeg_tools.trim(source, target, start, end)
+
+            logging.info(f'Trim Video {source} from {start} to {end} completed.')
+
+            self.app.thumbnail_view.insert_thumbnail(target)
 
     def on_position_change(self, instance, value):
         if self.current_video:
@@ -442,7 +471,11 @@ class image_view(Screen):
             elif keycode in [Keyboard.keycodes['f']]:
                 self.video_extract_frame()
             elif keycode in [Keyboard.keycodes['g']]:
-                self.video_extract_current_section()
+                self.video_set_trim_start()
+            elif keycode in [Keyboard.keycodes['h']]:
+                self.video_set_trim_end()
+            elif keycode in [Keyboard.keycodes['j']]:
+                self.video_trim()
             elif keycode == Keyboard.keycodes['f11']:
                 self.toggle_full_screen()
 

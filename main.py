@@ -30,8 +30,11 @@ class fmb_app(App):
     thumbnail_view = None
     image_view = None
     image_editor = None
+    app_title = 'Folder Media Browser'
 
     def build(self):
+        self.title = self.app_title
+
         Window.clearcolor = (0.118, 0.118, 0.118, 1)
 
         self.maximized = False
