@@ -1,15 +1,13 @@
 import os
 
 class MediaFile():
-  path: None
-  thumbnailPath: None
-  name: None  
-  extension: None
-  modified: None
-  captured: None
-
   def __init__(self, path):
     self.path = path
+    self.thumbnailPath: str | None
+    self.name: str | None
+    self.extension: str | None
+    self.modified: float | None
+    self.captured: float | None
     self.processPath()
 
   def processPath(self):

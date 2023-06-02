@@ -23,13 +23,14 @@ import logging
 from models.folder import Folder
 from models.mediafile import MediaFile
 from utilities.thumbnail import Thumbnail
+from models.data import Data
 
 drag_controller = DraggableController()
 
 class DraggableGridLayout(DraggableLayoutBehavior, GridLayout):
     def __init__(self, **kwargs):
         super(DraggableGridLayout, self).__init__(**kwargs)
-        self.register_event_type('on_drag_complete')
+        self.register_event_type('on_drag_complete') # type: ignore
 
     def compare_pos_to_widget(self, widget, pos):
         return 'before' if pos[0] < widget.center_x else 'after'
@@ -40,7 +41,7 @@ class DraggableGridLayout(DraggableLayoutBehavior, GridLayout):
             index = index - 1
         self.remove_widget(drag_widget)
         self.add_widget(drag_widget, index)
-        self.dispatch('on_drag_complete')
+        self.dispatch('on_drag_complete') # type: ignore
 
     def get_drop_insertion_index_move(self, x, y):
         pass
@@ -51,13 +52,16 @@ class DraggableGridLayout(DraggableLayoutBehavior, GridLayout):
 class thumbnail_image(Image):    
     def __init__(self, **kwargs):
         super(thumbnail_image, self).__init__(**kwargs)
+
         self.focused = False
         self.selected = False
-        self.outline_offset = None
+        self.outline_offset: tuple[float, float]
         self.outline_colour = None
         self.outline_line = None
+        self.mediaFile: MediaFile
+        self.cancel_thread: threading.Event
 
-        self.bind(pos=self.set_pos_callback)
+        self.bind(pos=self.set_pos_callback) # type: ignore
 
     def clear_canvas_after_operations(self):
         logging.info(f'Clear Canvas After Operations for {self.mediaFile.name}')
@@ -65,15 +69,15 @@ class thumbnail_image(Image):
         current_outline_line = self.outline_line
         current_outline_colour = self.outline_colour
 
-        self.outline_offset = None
+        self.outline_offset = None # type: ignore
         self.outline_colour = None
         self.outline_line = None  
         
         if current_outline_line:
-            self.canvas.after.remove(current_outline_line)
+            self.canvas.after.remove(current_outline_line) # type: ignore
             
         if current_outline_colour:
-            self.canvas.after.remove(current_outline_colour)                      
+            self.canvas.after.remove(current_outline_colour) # type: ignore
 
     def show_selected(self):
         self.selected = True            
@@ -91,12 +95,12 @@ class thumbnail_image(Image):
         x_offset = ((width - imageWidth) / 2)
         y_offset = ((height - imageHeight) / 2)
         
-        self.outline_offset = (x_offset, y_offset)
+        self.outline_offset = (x_offset, y_offset) # type: ignore
         self.outline_colour = Color(0.207, 0.463, 0.839, mode='rgb')
         self.outline_line = Line(width=sp(2), rectangle=(self.pos[0] + x_offset, self.pos[1] + y_offset, imageWidth, imageHeight))
 
-        self.canvas.after.add(self.outline_colour)
-        self.canvas.after.add(self.outline_line)
+        self.canvas.after.add(self.outline_colour) # type: ignore
+        self.canvas.after.add(self.outline_line) # type: ignore
 
     def hide_selected(self):
         self.selected = False
@@ -114,28 +118,29 @@ class thumbnail_widget(DraggableObjectBehavior, FloatLayout):
 
 Builder.load_file('views/thumbnail_view.kv')
 
-class thumbnail_view(Screen):
-    app = None
-    data = None
-    columns = 1
-    currentIndex = None
-    shift_index = None
-    currentImage = None
-    currentFile = None
-    folder = Folder()
-    cancel_thread = None
-    thread = None
-    keyboard_modifiers = []
-
+class thumbnail_view(Screen):    
     def __init__(self, **kwargs):
         super(thumbnail_view, self).__init__(**kwargs)
-        self.app = App.get_running_app()
-        self.data = self.app.data
+
+        from main import fmb_app # import here to avoid circular reference and allow type safety
+
+        self.app: fmb_app = App.get_running_app()
+        self.data: Data = self.app.data  # type: ignore
         self.version = 0
         self.cancel_thread = threading.Event()
+        self.folder = Folder()
+        self.columns = 1
+        self.currentIndex = None
+        self.shift_index = None
+        self.currentImage = None
+        self.currentFile = None    
+        self.thread = None
+        self.keyboard_modifiers = []
+
         Window.bind(on_resize=self.on_window_resize)
         Window.bind(on_key_up=self.on_key_up)
         Window.bind(on_key_down=self.on_key_down)
+        
         self.save_layout_trigger = Clock.create_trigger(self.on_save_layout_trigger, timeout=5, interval=False, release_ref=False)
 
     def on_enter(self):
@@ -207,7 +212,7 @@ class thumbnail_view(Screen):
                 if self.app.closing:
                     logging.info('Exit Thread on Close')
                     break
-                mediaFile = MediaFile(os.path.join(path, file['name']))
+                mediaFile = MediaFile(os.path.join(path, file['name'])) # type: ignore
                 if mediaFile.exists and not mediaFile.name in added_files:
                     added_files.append(mediaFile.name)
                     mediaFile.readModified()
@@ -259,8 +264,8 @@ class thumbnail_view(Screen):
         logging.info('Thumbnail - ' + mediaFile.name)
         thumbnailWidget = thumbnail_widget()
         thumbnailWidget.drag_cls = 'thumbnail_layout'
-        thumbnailWidget.bind(on_touch_down = self.thumbnail_touch_down)
-        thumbnailWidget.thumbnail_view = self
+        thumbnailWidget.bind(on_touch_down = self.thumbnail_touch_down) # type: ignore
+        thumbnailWidget.thumbnail_view = self  # type: ignore
 
         thumbnailImage = thumbnail_image()
         thumbnailWidget.drag_cls = 'thumbnail_layout'
@@ -268,7 +273,7 @@ class thumbnail_view(Screen):
         thumbnailImage.pos_hint = {'x': self.data.marginSize, 'y': self.data.marginSize}
         thumbnailImage.size_hint = (self.data.thumbnailSize, self.data.thumbnailSize)
         thumbnailImage.mediaFile = mediaFile
-        thumbnailImage.bind(pos = self.thumbnail_pos_changed)
+        thumbnailImage.bind(pos = self.thumbnail_pos_changed) # type: ignore
 
         thumbnailWidget.add_widget(thumbnailImage)
         if index == None:
@@ -381,8 +386,8 @@ class thumbnail_view(Screen):
             self.shift_index = self.currentIndex
 
         # Select all images beteen the initial and the current.
-        start_index = min(selected_index, self.shift_index)
-        end_index = max(selected_index, self.shift_index)
+        start_index = min(selected_index, self.shift_index) # type: ignore
+        end_index = max(selected_index, self.shift_index) # type: ignore
         for select_index in range(start_index, end_index + 1):
             select_widget = thumbnailGrid.children[select_index]
             select_image = select_widget.children[0]
@@ -485,7 +490,7 @@ class thumbnail_view(Screen):
             widget = self.currentImage.parent
             thumbnailGrid = self.ids.thumbnailGrid
             thumbnailGrid.remove_widget(widget)
-            self.select_image(self.currentIndex - 1, True) # Select the next image.            
+            self.select_image(self.currentIndex - 1, True) # type: ignore # Select the next image.            
             threading.Thread(target=(lambda: self.delete_current_thread(file))).start()
             self.trigger_save_layout()        
     
@@ -499,7 +504,7 @@ class thumbnail_view(Screen):
         self.data.save()
 
     def open_parent_folder_click(self):
-        parentFolder = os.path.dirname(self.data.rootFolder)
+        parentFolder = os.path.dirname(self.data.rootFolder) # type: ignore
         if parentFolder == self.data.rootFolder or not os.path.exists(parentFolder):
             parentFolder = ''
         self.data.rootFolder = parentFolder
@@ -619,10 +624,10 @@ class thumbnail_view(Screen):
     def add_folder(self, foldersGrid, path, name):
         button = Button()
         button.text = name
-        button.fmbPath = path
+        button.fmbPath = path # type: ignore
         button.size_hint = (1, None)
         button.height = self.data.folderHeight
-        button.bind(on_press = self.folder_button_click)
+        button.bind(on_press = self.folder_button_click) # type: ignore
 
         foldersGrid.add_widget(button)
 

@@ -25,17 +25,19 @@ class fmb_video(Video):
     def texture_update(self, *largs):
         pass
 
-class image_view(Screen):
-    app = None
-    data = None
-    current_video = None
-    currentFrameRate = None
-    no_back = False    
-
+class image_view(Screen):        
     def __init__(self, **kwargs):
         super(image_view, self).__init__(**kwargs) 
-        self.app = App.get_running_app()
-        self.data = self.app.data
+        
+        from main import fmb_app # import here to avoid circular reference and allow type safety
+
+        self.app: fmb_app = App.get_running_app()
+        self.data: Data = self.app.data  # type: ignore
+
+        self.current_video = None
+        self.currentFrameRate = None
+        self.no_back = False    
+
         self.seeked_frames = 0
         self.restart_position = None
 
@@ -142,10 +144,10 @@ class image_view(Screen):
         
             video = fmb_video()
             image_grid.add_widget(video)       
-            video.bind(position=self.on_position_change)
-            video.bind(duration=self.on_duration_change)
-            video.bind(state=self.on_state_change)
-            video.bind(loaded=self.on_loaded)
+            video.bind(position=self.on_position_change) # type: ignore
+            video.bind(duration=self.on_duration_change) # type: ignore
+            video.bind(state=self.on_state_change) # type: ignore
+            video.bind(loaded=self.on_loaded) # type: ignore
             video.fit_mode = 'contain'
             self.current_video = video
             self.currentFrameRate = 30
@@ -237,7 +239,7 @@ class image_view(Screen):
                     
             self.restart_position = video.position / video.duration
 
-            path = self.app.thumbnail_view.currentFile.path
+            path = self.app.thumbnail_view.currentFile.path # type: ignore
             self.showVideo(path, True)
 
     def on_loaded(self, object, value):
@@ -295,7 +297,7 @@ class image_view(Screen):
             video = self.current_video
             if video.state == 'pause':
                 ffVideo = video._video
-                ffplayer = ffVideo._ffplayer                
+                ffplayer = ffVideo._ffplayer # type: ignore             
                 ffplayer.set_pause(False)
                 try:                                    
                     frame = None
@@ -306,8 +308,8 @@ class image_view(Screen):
                         if value in ('paused', 'eof'):
                             break
                     if frame:                        
-                        ffVideo._next_frame = frame
-                        ffVideo._trigger()
+                        ffVideo._next_frame = frame # type: ignore
+                        ffVideo._trigger() # type: ignore
                 finally:
                     ffplayer.set_pause(True)
                     self.seeked_frames += 1
@@ -317,10 +319,10 @@ class image_view(Screen):
             video = self.current_video
             if video.state == 'pause':
                 ff_video = video._video
-                frame = ff_video._next_frame
+                frame = ff_video._next_frame # type: ignore
                 image = video_frame.get_frame_image(frame[0])
 
-                path = self.app.thumbnail_view.currentFile.path
+                path = self.app.thumbnail_view.currentFile.path # type: ignore
 
                 parts = os.path.splitext(path)
 
@@ -350,7 +352,7 @@ class image_view(Screen):
 
     def video_extract_section(self, start, end):
         if self.current_video:
-            source = self.app.thumbnail_view.currentFile.path
+            source = self.app.thumbnail_view.currentFile.path # type: ignore
 
             parts = os.path.splitext(source)
             extension = parts[1].lower()

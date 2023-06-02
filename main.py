@@ -26,11 +26,15 @@ from kivy.logger import Logger, LOG_LEVELS
 Logger.setLevel(LOG_LEVELS["info"]) # trace, debug, info, warning, error, critical
 
 class fmb_app(App):
-    closing = False
-    thumbnail_view = None
-    image_view = None
-    image_editor = None
-    app_title = 'Folder Media Browser'
+    def __init__(self, **kwargs):
+        super(fmb_app, self).__init__(**kwargs)
+
+        self.closing = False
+        self.thumbnail_view: thumbnail_view
+        self.image_view: image_view
+        self.image_editor: image_editor
+        self.app_title = 'Folder Media Browser'
+        self.data: Data
 
     def build(self):
         self.title = self.app_title
