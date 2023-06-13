@@ -335,7 +335,7 @@ class image_editor(Screen):
                 suffixNumber = suffixNumber + 1                       
 
             image.save(frame_path)
-            self.app.thumbnail_view.insertThumbnail(frame_path)
+            self.app.thumbnail_view.insert_thumbnail(frame_path)
             
             save_label = self.ids.save_label
             save_label.text = 'Saved'

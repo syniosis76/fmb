@@ -42,7 +42,6 @@ class image_view(Screen):
         self.restart_position = None
 
         self.video_trim_start = None
-        self.video_trim_end = None
 
         Window.bind(on_resize=self.on_window_resize)        
         Window.bind(on_key_down=self.on_key_down)
@@ -156,7 +155,6 @@ class image_view(Screen):
             video.source = path
 
             self.video_trim_start = None
-            self.video_trim_end = None
 
             self.ids.edit_button.opacity = 0
             self.ids.video_controls.opacity = 1
@@ -338,17 +336,11 @@ class image_view(Screen):
 
     def video_set_trim_start(self):
         if self.current_video:
-            video = self.current_video
-            self.video_trim_start = video.position
-
-    def video_set_trim_end(self):
-        if self.current_video:            
-            video = self.current_video
-            self.video_trim_end = video.position
+            self.video_trim_start = self.current_video.position
 
     def video_trim(self):
-        if self.current_video and self.video_trim_start and self.video_trim_end:
-            self.video_extract_section(self.video_trim_start, self.video_trim_end)
+        if self.current_video and self.video_trim_start:
+            self.video_extract_section(self.video_trim_start, self.current_video.position)
 
     def video_extract_section(self, start, end):
         if self.current_video:
@@ -472,11 +464,9 @@ class image_view(Screen):
                 self.videoNextFrame()
             elif keycode in [Keyboard.keycodes['f']]:
                 self.video_extract_frame()
-            elif keycode in [Keyboard.keycodes['g']]:
+            elif keycode in [Keyboard.keycodes['s']]:
                 self.video_set_trim_start()
-            elif keycode in [Keyboard.keycodes['h']]:
-                self.video_set_trim_end()
-            elif keycode in [Keyboard.keycodes['j']]:
+            elif keycode in [Keyboard.keycodes['t']]:
                 self.video_trim()
             elif keycode == Keyboard.keycodes['f11']:
                 self.toggle_full_screen()
