@@ -342,6 +342,10 @@ class image_view(Screen):
         if self.current_video:
             self.video_extract_section(self.video_trim_start, self.current_video.position)
 
+    def video_restart(self):
+        if self.current_video:
+            self.current_video.seek(0, precise = False)
+
     def video_extract_section(self, start, end):
         if self.current_video:
             source = self.app.thumbnail_view.currentFile.path # type: ignore
@@ -468,6 +472,8 @@ class image_view(Screen):
                 self.video_set_trim_start()
             elif keycode in [Keyboard.keycodes['t']]:
                 self.video_trim()
+            elif keycode in [Keyboard.keycodes['r']]:
+                self.video_restart()
             elif keycode == Keyboard.keycodes['f11']:
                 self.toggle_full_screen()
 
