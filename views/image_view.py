@@ -41,7 +41,7 @@ class image_view(Screen):
         self.seeked_frames = 0
         self.restart_position = None
 
-        self.video_trim_start = None
+        self.video_trim_start = 0
 
         Window.bind(on_resize=self.on_window_resize)        
         Window.bind(on_key_down=self.on_key_down)
@@ -154,7 +154,7 @@ class image_view(Screen):
         try:
             video.source = path
 
-            self.video_trim_start = None
+            self.video_trim_start = 0
 
             self.ids.edit_button.opacity = 0
             self.ids.video_controls.opacity = 1
@@ -335,11 +335,11 @@ class image_view(Screen):
                 self.app.thumbnail_view.insert_thumbnail(frame_path)
 
     def video_set_trim_start(self):
-        if self.current_video:
+        if self.current_video and self.current_video.position != None:
             self.video_trim_start = self.current_video.position
 
     def video_trim(self):
-        if self.current_video and self.video_trim_start:
+        if self.current_video:
             self.video_extract_section(self.video_trim_start, self.current_video.position)
 
     def video_extract_section(self, start, end):

@@ -1,13 +1,12 @@
 import ffpyplayer # Sets path for ffpyplayer ffmpeg binaries
 import ffmpeg
-import os
 import datetime
 
 def trim(source_file, target_file, start_seconds, end_seconds):
     start_time = str(datetime.timedelta(seconds=start_seconds))
     end_time = str(datetime.timedelta(seconds=end_seconds))
 
-    ffmpeg.input(source_file).output(target_file, ss=(start_time), to=(end_time), **{'c:v': 'copy'}, **{'c:a': 'copy'}).run()
+    ffmpeg.input(source_file, ss=(start_time), to=(end_time), **{'noaccurate_seek': None}).output(target_file, **{'c:v': 'copy'}, **{'c:a': 'copy'}, **{'avoid_negative_ts': '1'}).run()    
 
 #trim('source.mp4', 'target.mp4', 20, 50)
 
