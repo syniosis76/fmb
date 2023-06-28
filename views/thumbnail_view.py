@@ -18,7 +18,7 @@ from send2trash import send2trash
 import os
 import threading
 import json
-import logging
+from kivy.logger import Logger
 
 from models.folder import Folder
 from models.mediafile import MediaFile
@@ -64,7 +64,7 @@ class thumbnail_image(Image):
         self.bind(pos=self.set_pos_callback) # type: ignore
 
     def clear_canvas_after_operations(self):
-        logging.info(f'Clear Canvas After Operations for {self.mediaFile.name}')
+        Logger.debug(f'Clear Canvas After Operations for {self.mediaFile.name}')
         
         current_outline_line = self.outline_line
         current_outline_colour = self.outline_colour
@@ -114,7 +114,11 @@ class thumbnail_image(Image):
 
 class thumbnail_widget(DraggableObjectBehavior, FloatLayout):    
     def __init__(self, **kwargs):
+        self.dragging = False
         super(thumbnail_widget, self).__init__(**kwargs, drag_controller=drag_controller)
+
+    def initiate_drag(self):
+        self.dragging = True
 
 Builder.load_file('views/thumbnail_view.kv')
 
@@ -136,6 +140,7 @@ class thumbnail_view(Screen):
         self.currentFile = None    
         self.thread = None
         self.keyboard_modifiers = []
+        self.do_clear_selected = False
 
         Window.bind(on_resize=self.on_window_resize)
         Window.bind(on_key_up=self.on_key_up)
@@ -162,11 +167,11 @@ class thumbnail_view(Screen):
 
     def show_thumbnails(self):
         if self.thread and not self.cancel_thread.is_set():
-            logging.info('Thread Cancel')
+            Logger.debug('Thread Cancel')
             self.cancel_thread.set()
-            logging.info('Thread Wait')
+            Logger.debug('Thread Wait')
             self.thread.join() # Wait for completion.
-            logging.info('Thread Complete')
+            Logger.debug('Thread Complete')
             self.thread = None
 
         Clock.schedule_once(lambda dt: self.show_thumbnails_schedule())
@@ -207,10 +212,10 @@ class thumbnail_view(Screen):
         if layout:
             for file in layout['files']:
                 if self.cancel_thread.is_set():
-                    logging.info('Exit Thread on Cancel')
+                    Logger.debug('Exit Thread on Cancel')
                     break
                 if self.app.closing:
-                    logging.info('Exit Thread on Close')
+                    Logger.debug('Exit Thread on Close')
                     break
                 mediaFile = MediaFile(os.path.join(path, file['name'])) # type: ignore
                 if mediaFile.exists and not mediaFile.name in added_files:
@@ -228,10 +233,10 @@ class thumbnail_view(Screen):
 
         for file in self.folder.files:
             if self.cancel_thread.is_set():
-                logging.info('Exit Thread on Cancel')
+                Logger.debug('Exit Thread on Cancel')
                 break
             if self.app.closing:
-                logging.info('Exit Thread on Close')
+                Logger.debug('Exit Thread on Close')
                 break
             if not file.name in added_files:
                 added_files.append(file.name)
@@ -261,10 +266,11 @@ class thumbnail_view(Screen):
 
     @mainthread
     def add_thumbnail(self, thumbnailGrid, mediaFile, coreImage, index):
-        logging.info('Thumbnail - ' + mediaFile.name)
+        Logger.debug('Thumbnail - ' + mediaFile.name)
         thumbnailWidget = thumbnail_widget()
         thumbnailWidget.drag_cls = 'thumbnail_layout'
         thumbnailWidget.bind(on_touch_down = self.thumbnail_touch_down) # type: ignore
+        thumbnailWidget.bind(on_touch_up = self.thumbnail_touch_up) # type: ignore
         thumbnailWidget.thumbnail_view = self  # type: ignore
 
         thumbnailImage = thumbnail_image()
@@ -286,7 +292,7 @@ class thumbnail_view(Screen):
 
         self.update_thumbnail_grid_size(Window.width)
 
-        #logging.info('Adding Complete - ' + mediaFile.name)
+        Logger.debug('Adding Complete - ' + mediaFile.name)
 
         return mediaFile.name
 
@@ -303,23 +309,26 @@ class thumbnail_view(Screen):
 
     def show_selected(self, object):
         if object and not object.selected:
-            logging.info('Select ' + object.mediaFile.name)
+            Logger.debug('Select ' + object.mediaFile.name)
 
             object.show_selected()
 
     def hide_selected(self, object):
         if object and object.selected:
-            logging.info('Deselect ' + object.mediaFile.name)           
+            Logger.debug('Deselect ' + object.mediaFile.name)           
             object.hide_selected()
 
-    def clear_selected(self):        
+    def clear_selected(self, exclude_image = None):        
+        self.do_clear_selected = False
+
         thumbnailGrid = self.ids.thumbnailGrid
         length = len(thumbnailGrid.children)
 
         for index in range(length - 1, -1, -1):
             widget = thumbnailGrid.children[index]
             image = widget.children[0]
-            self.hide_selected(image)
+            if image != exclude_image:
+                self.hide_selected(image)
 
     def thumbnail_pos_changed(self, object, pos):
         if object == self.currentImage:
@@ -357,9 +366,10 @@ class thumbnail_view(Screen):
                     thumbnailGrid = self.ids.thumbnailGrid
 
                     if 'ctrl' not in self.keyboard_modifiers:
-                        self.clear_selected()
+                        self.do_clear_selected = True
 
                     if 'shift' in self.keyboard_modifiers:
+                        self.clear_selected()
                         self.shift_select(thumbnailGrid.children.index(widget))
                     else:
                         self.shift_index = None
@@ -378,6 +388,14 @@ class thumbnail_view(Screen):
                     super(thumbnail_widget, widget).on_touch_down(touch)
 
                     return True
+                
+    def thumbnail_touch_up(self, instance, touch):        
+        result = super(thumbnail_widget, instance).on_touch_up(touch)
+
+        if self.currentImage and not self.currentImage.parent.dragging and self.do_clear_selected:
+            self.clear_selected(self.currentImage)
+
+        return result
 
     def shift_select(self, selected_index):
         thumbnailGrid = self.ids.thumbnailGrid
@@ -526,7 +544,7 @@ class thumbnail_view(Screen):
         if self.manager.current == self.name:
             self.add_keyboard_modifier(keycode)
 
-            #logging.info('thumbnail_view Key Down: ' + str(keycode))
+            Logger.debug('thumbnail_view Key Down: ' + str(keycode))
             if keycode == Keyboard.keycodes['right']:
                 self.change_image(-1)
             elif keycode == Keyboard.keycodes['left']:
@@ -550,7 +568,7 @@ class thumbnail_view(Screen):
     def on_key_up(self, window, keycode, text):
         if self.manager.current == self.name:
             self.remove_keyboard_modifier(keycode)
-            #logging.info('thumbnail_view Key Up: ' + str(keycode))
+            Logger.debug('thumbnail_view Key Up: ' + str(keycode))
 
     def add_keyboard_modifier(self, keycode):
         modifiers = self.get_keycode_modifiers(keycode)
@@ -653,7 +671,27 @@ class thumbnail_view(Screen):
             Window.fullscreen = False
 
     def on_drag_complete(self):
+        self.drag_other_images(self.currentImage)
         self.trigger_save_layout()
+
+    def drag_other_images(self, target_image):        
+        if target_image:
+            target_widget = target_image.parent   
+            thumbnailGrid = self.ids.thumbnailGrid
+            target_index = thumbnailGrid.children.index(target_widget)
+
+            length = len(thumbnailGrid.children)
+
+            for index in range(length - 1, -1, -1):
+                widget = thumbnailGrid.children[index]
+                if widget != target_widget:
+                    image = widget.children[0]
+                    if image.selected:
+                        target_index -= 1
+                        thumbnailGrid.remove_widget(widget)
+                        thumbnailGrid.add_widget(widget, target_index)
+
+            target_image.dragging = False
 
     def trigger_save_layout(self):
         self.save_layout_trigger.cancel()
@@ -679,6 +717,8 @@ class thumbnail_view(Screen):
         layout = {}
         layout['version'] = 0.1
         layout['files'] = files
+
+        os.makedirs(self.app.data.currentWorkingFolder, exist_ok=True)
 
         with open(self.data.settings_file_name, 'w') as file:
             json.dump(layout, file)

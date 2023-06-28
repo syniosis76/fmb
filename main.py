@@ -23,7 +23,14 @@ from views.image_view import image_view
 from views.image_editor import image_editor
 
 from kivy.logger import Logger, LOG_LEVELS
-Logger.setLevel(LOG_LEVELS["info"]) # trace, debug, info, warning, error, critical
+
+import sys
+
+# Set in command line (and launch.json) with --log parameter
+for argument in sys.argv:
+    if argument.startswith('--log'):
+        argument_value = argument[6:]
+        Logger.setLevel(LOG_LEVELS[argument_value]) # trace, debug, info, warning, error, critical
 
 class fmb_app(App):
     def __init__(self, **kwargs):

@@ -13,7 +13,7 @@ from PIL import Image as PILImage
 
 import os
 import time
-import logging
+from kivy.logger import Logger
 
 from utilities import video_frame
 from utilities import exifhandler
@@ -161,7 +161,7 @@ class image_view(Screen):
 
             video.state = 'play' 
         except Exception as e:
-            logging.exception('Error Playing Video - %S', e)                   
+            Logger.exception('Error Playing Video - %S', e)                   
 
     def clear_image_widget(self):
         image_grid = self.ids.image_grid
@@ -212,7 +212,7 @@ class image_view(Screen):
             else:                
                 newstate = 'play'
             
-            logging.info('Play/Pause ' + video.state + ' to ' + newstate)
+            Logger.info('Play/Pause ' + video.state + ' to ' + newstate)
             
             self.set_video_state(newstate)
             video.state = newstate
@@ -282,7 +282,7 @@ class image_view(Screen):
             else:
                 newPositionPercent = 1
 
-            logging.info(f'Seek by {seconds:.2f}, Current {position:.2f} ({position / duration * 100:.2f}), New {newPosition:.2f} ({newPositionPercent * 100:.2f})')
+            Logger.info(f'Seek by {seconds:.2f}, Current {position:.2f} ({position / duration * 100:.2f}), New {newPosition:.2f} ({newPositionPercent * 100:.2f})')
 
             if abs(newPosition - position) > 0.1:
                 if video.state in ('stop'):
@@ -356,11 +356,11 @@ class image_view(Screen):
                     break
                 suffixNumber = suffixNumber + 1
 
-            logging.info(f'Trim Video {source} from {start} to {end}.')
+            Logger.info(f'Trim Video {source} from {start} to {end}.')
 
             ffmpeg_tools.trim(source, target, start, end)
 
-            logging.info(f'Trim Video {source} from {start} to {end} completed.')
+            Logger.info(f'Trim Video {source} from {start} to {end} completed.')
 
             self.app.thumbnail_view.insert_thumbnail(target)
 
