@@ -13,6 +13,7 @@ from PIL import Image as PILImage
 
 import os
 import time
+import threading
 from kivy.logger import Logger
 
 from utilities import video_frame
@@ -56,6 +57,13 @@ class image_view(Screen):
         self.fade_in_animation = Animation(opacity=0.8, duration=fade_in_duration)               
         self.fade_out_animation = Animation(opacity=0, duration=fade_out_duration)
         self.fade_out_trigger = Clock.create_trigger(self.on_fade_out_trigger, timeout=fade_timout_duration, interval=False, release_ref=False)
+
+        toast_fade_in_duration = 0.2
+        toast_fade_out_duration = 1.0
+        toast_fade_timout_duration = 3.0
+        self.toast_fade_in_animation = Animation(opacity=1.0, duration=toast_fade_in_duration)               
+        self.toast_fade_out_animation = Animation(opacity=0, duration=toast_fade_out_duration)
+        self.toast_fade_out_trigger = Clock.create_trigger(self.on_toast_fade_out_trigger, timeout=toast_fade_timout_duration, interval=False, release_ref=False)
 
     # Reload the Image on resize to scale to fit.
     def on_window_resize(self, window, width, height):
@@ -336,11 +344,13 @@ class image_view(Screen):
 
     def video_set_trim_start(self):
         if self.current_video and self.current_video.position != None:
-            self.video_trim_start = self.current_video.position
+            self.show_toast('Set Trim Start Position')
+            self.video_trim_start = self.current_video.position            
 
     def video_trim(self):
         if self.current_video:
-            self.video_extract_section(self.video_trim_start, self.current_video.position)
+            self.show_toast('Saving Trimmed Video')
+            self.video_extract_section(self.video_trim_start, self.current_video.position)            
 
     def video_restart(self):
         if self.current_video:
@@ -348,25 +358,29 @@ class image_view(Screen):
 
     def video_extract_section(self, start, end):
         if self.current_video:
-            source = self.app.thumbnail_view.currentFile.path # type: ignore
+            source = self.app.thumbnail_view.currentFile.path # type: ignore            
+            
+            thread = threading.Thread(target=lambda: self.video_extract_section_thread(source, start, end))        
+            thread.start()            
 
-            parts = os.path.splitext(source)
-            extension = parts[1].lower()
+    def video_extract_section_thread(self, source, start, end):
+        Logger.info(f'Trim Video {source} from {start} to {end}.')
 
-            suffixNumber = 1
-            while (True):
-                target = parts[0] + ' ' + str(suffixNumber) + extension
-                if not os.path.exists(target):
-                    break
-                suffixNumber = suffixNumber + 1
+        parts = os.path.splitext(source)
+        extension = parts[1].lower()            
 
-            Logger.info(f'Trim Video {source} from {start} to {end}.')
+        suffixNumber = 1
+        while (True):
+            target = parts[0] + ' ' + str(suffixNumber) + extension
+            if not os.path.exists(target):
+                break
+            suffixNumber = suffixNumber + 1
 
-            ffmpeg_tools.trim(source, target, start, end)
+        ffmpeg_tools.trim(source, target, start, end)        
 
-            Logger.info(f'Trim Video {source} from {start} to {end} completed.')
+        Logger.info(f'Trim Video {source} from {start} to {end} completed.')
 
-            self.app.thumbnail_view.insert_thumbnail(target)
+        self.app.thumbnail_view.insert_thumbnail(target)
 
     def on_position_change(self, instance, value):
         if self.current_video:
@@ -381,10 +395,9 @@ class image_view(Screen):
             self.ids.play_pause_button.source = 'images\\pause.png'
         else:
             self.ids.play_pause_button.source = 'images\\play.png'
-            
-    
+                
     def fade_out_overlay(self):        
-        if self.manager.current == 'ImageView' and self.ids.overlay.opacity > 0 and not self.fade_out_animation.have_properties_to_animate(self.ids.overlay):            
+        if self.manager.current == 'image_view' and self.ids.overlay.opacity > 0 and not self.fade_out_animation.have_properties_to_animate(self.ids.overlay):            
             self.fade_in_animation.cancel(self.ids.overlay)
             self.fade_out_animation.start(self.ids.overlay)
             Window.show_cursor = False
@@ -505,4 +518,16 @@ class image_view(Screen):
             return True
         
         return False
+    
+    def show_toast(self, text):
+        self.toast_fade_out_trigger.cancel()
         
+        toast_label = self.ids.toast_label
+        toast_label.text = text
+
+        self.toast_fade_in_animation.start(self.ids.toast)
+        self.toast_fade_out_trigger()
+
+    def on_toast_fade_out_trigger(self, *args):
+        self.toast_fade_out_animation.start(self.ids.toast)
+

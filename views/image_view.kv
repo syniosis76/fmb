@@ -1,17 +1,38 @@
 #:kivy 2.2.0
 
-<image_view>:
+<image_view>:		
 	GridLayout:
 		cols: 1		
 		GridLayout:
 			id: image_grid
 			cols: 1
 			size_hint_y: 1.0			
+	FloatLayout:			
+		id: toast
+		opacity: 0
+		pos: root.width / 2 - button_size * 7, root.height - button_size * 2.5
+		size_hint: None, None
+		size: button_size * 14, button_size * 2
+		canvas.before:
+			Color:
+				rgba: 0.207, 0.463, 0.839, 1.000
+			Rectangle:
+				pos: self.pos
+				size: self.size
+		Label:
+			id: toast_label
+			pos: root.width / 2 - button_size * 6.5, root.height - button_size * 1.9
+			text: 'Toast Message'
+			font_size: '18sp'
+			size_hint: None, None
+			size: button_size * 13, button_size
+			text_size: self.size
+			bold: True
 	FloatLayout:
 		id: overlay
 		cols: 2				
 		size_hint: 1.0, 1.0					
-		opacity: 0
+		opacity: 0		
 		Image:			
 			id: back_button			
 			pos: 6, root.height - 36
