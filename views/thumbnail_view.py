@@ -140,7 +140,6 @@ class thumbnail_view(Screen):
         self.currentFile = None    
         self.thread = None
         self.keyboard_modifiers = []
-        self.do_clear_selected = False
 
         Window.bind(on_resize=self.on_window_resize)
         Window.bind(on_key_up=self.on_key_up)
@@ -318,9 +317,7 @@ class thumbnail_view(Screen):
             Logger.debug('Deselect ' + object.mediaFile.name)           
             object.hide_selected()
 
-    def clear_selected(self, exclude_image = None):        
-        self.do_clear_selected = False
-
+    def clear_selected(self, exclude_image = None):
         thumbnailGrid = self.ids.thumbnailGrid
         length = len(thumbnailGrid.children)
 
@@ -365,8 +362,8 @@ class thumbnail_view(Screen):
                 if touch.is_double_tap or image != self.currentImage:
                     thumbnailGrid = self.ids.thumbnailGrid
 
-                    if 'ctrl' not in self.keyboard_modifiers:
-                        self.do_clear_selected = True
+                    if not image.selected and 'ctrl' not in self.keyboard_modifiers:
+                        self.clear_selected()
 
                     if 'shift' in self.keyboard_modifiers:
                         self.clear_selected()
@@ -388,12 +385,11 @@ class thumbnail_view(Screen):
                     super(thumbnail_widget, widget).on_touch_down(touch)
 
                     return True
+            else:
+                self.clear_selected()
                 
     def thumbnail_touch_up(self, instance, touch):        
         result = super(thumbnail_widget, instance).on_touch_up(touch)
-
-        if self.currentImage and not self.currentImage.parent.dragging and self.do_clear_selected:
-            self.clear_selected(self.currentImage)
 
         return result
 
@@ -562,6 +558,8 @@ class thumbnail_view(Screen):
                 self.manager.current = 'image_view'
             elif keycode == Keyboard.keycodes['delete']:
                 self.delete()
+            elif keycode == Keyboard.keycodes['escape']:
+                self.clear_selected()
             elif keycode == Keyboard.keycodes['f11']:
                 self.toggle_full_screen()
 
@@ -682,14 +680,21 @@ class thumbnail_view(Screen):
 
             length = len(thumbnailGrid.children)
 
-            for index in range(length - 1, -1, -1):
-                widget = thumbnailGrid.children[index]
+            selected_widgets = []
+            for widget in thumbnailGrid.children:                
                 if widget != target_widget:
                     image = widget.children[0]
-                    if image.selected:
-                        target_index -= 1
-                        thumbnailGrid.remove_widget(widget)
-                        thumbnailGrid.add_widget(widget, target_index)
+                    if image.selected:    
+                        selected_widgets.insert(0, widget)
+
+            for widget in selected_widgets:
+                image = widget.children[0]
+                source_index = thumbnailGrid.children.index(widget)                        
+                if source_index <= target_index:
+                    target_index -= 1
+                Logger.info(F'{image.mediaFile.name} {source_index} {target_index}')
+                thumbnailGrid.remove_widget(widget)
+                thumbnailGrid.add_widget(widget, target_index)
 
             target_image.dragging = False
 
