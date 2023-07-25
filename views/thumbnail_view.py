@@ -692,7 +692,7 @@ class thumbnail_view(Screen):
                 source_index = thumbnailGrid.children.index(widget)                        
                 if source_index <= target_index:
                     target_index -= 1
-                Logger.info(F'{image.mediaFile.name} {source_index} {target_index}')
+                Logger.debug(F'{image.mediaFile.name} {source_index} {target_index}')
                 thumbnailGrid.remove_widget(widget)
                 thumbnailGrid.add_widget(widget, target_index)
 
