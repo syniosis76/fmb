@@ -6,8 +6,8 @@ import os
 import sys
 import time
 import traceback
-from utilities import video_frame
 from utilities import exifhandler
+from utilities import ffmpeg_tools
 
 class Thumbnail():
   app = None
@@ -27,23 +27,26 @@ class Thumbnail():
   
   def createThumbnailFile(self):
     # Ensure Working folder exists:
-    os.makedirs(self.app.data.currentWorkingFolder, exist_ok=True)                        
+    os.makedirs(self.app.data.currentWorkingFolder, exist_ok=True)    
 
     try:
       if self.mediaFile.extension in self.app.data.imageTypes:
         image = Image.open(self.mediaFile.path)
+        image.thumbnail((self.data.thumbnailWidth, self.data.thumbnailHeight))
       else:
-        try:          
-          image, duration = video_frame.get_video_frame(self.mediaFile.path, 3) # Get Frame at 3 seconds
-          if image == None:
-            # The video is too short. Try again
-            image, duration = video_frame.get_video_frame(self.mediaFile.path, duration / 2)
+        try:
+          # Generate a Video Thumbail to a temporary file in the PNG format.
+          thumbnail_file_png = self.thumbnailPath + '.png'          
+          ffmpeg_tools.generate_thumbnail(self.mediaFile.path, thumbnail_file_png, self.data.thumbnailWidth, self.data.thumbnailHeight)
+          image = Image.open(thumbnail_file_png)
+          image.load()
+          # Remove the temprary file.
+          os.remove(thumbnail_file_png)
         except:
-          traceback.print_exc()
+          print(sys.exc_info()[0])
           image = None
 
-      image = exifhandler.auto_rotate_image(image)          
-      image.thumbnail((self.data.thumbnailWidth, self.data.thumbnailHeight))      
+      image = exifhandler.auto_rotate_image(image)                
 
       if self.mediaFile.extension in self.app.data.videoTypes:
         if self.data.videoThumbnailOverlay == None:

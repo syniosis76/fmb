@@ -324,6 +324,7 @@ class image_view(Screen):
         if self.current_video:
             video = self.current_video
             if video.state == 'pause':
+                self.show_toast('Saving Video Frame')
                 ff_video = video._video
                 frame = ff_video._next_frame # type: ignore
                 image = video_frame.get_frame_image(frame[0])

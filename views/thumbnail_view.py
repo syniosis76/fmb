@@ -616,7 +616,7 @@ class thumbnail_view(Screen):
                 folders.append((entry, 'Documents'))
 
             folders.append((home, 'Home'))
-            for drive in range(ord('A'), ord('Z')):
+            for drive in range(ord('A'), ord('Z') + 1):
                 entry = chr(drive) + ':'
                 if os.path.exists(entry):
                     folders.append((entry + '\\', entry))
