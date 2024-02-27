@@ -1,5 +1,4 @@
 {
-  "python.linting.pylintEnabled": true,
-  "python.linting.enabled": false,
-  "python.analysis.typeCheckingMode": "basic"
+  "python.analysis.typeCheckingMode": "off",
+  "pylint.args": ["--disable=missing-class-docstring", "--disable=missing-function-docstring", "--disable=missing-module-docstring"]
 }

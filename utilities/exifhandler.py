@@ -28,6 +28,6 @@ def rotate_image(image, orientation):
 
 def auto_rotate_image(image):
   orientation = get_orientation(image)
-  rotate_image(image, orientation)
+  image = rotate_image(image, orientation)
   
   return image

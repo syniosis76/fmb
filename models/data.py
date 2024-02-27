@@ -4,8 +4,8 @@ from kivy.metrics import sp
 
 class Data():
   def __init__(self):
-    self.userSettingsPath = os.getenv('LOCALAPPDATA') # type: ignore
-    self.settingsPath = os.path.join(self.userSettingsPath, 'fmb-9220f09f-1c1b-4a65-b636-fe3996d18803') # type: ignore # UUID to ensure no conflict with other apps.
+    self.userSettingsPath = os.getenv('LOCALAPPDATA') # pylint: disable=no-member
+    self.settingsPath = os.path.join(self.userSettingsPath, 'fmb-9220f09f-1c1b-4a65-b636-fe3996d18803') # pylint: disable=no-member # UUID to ensure no conflict with other apps.
     self.settingsFile = os.path.join(self.settingsPath, 'data.data')  
     self.folders = []
 
@@ -59,7 +59,7 @@ class Data():
 
   @property
   def currentWorkingFolder(self):
-    return os.path.join(self.currentFolder, '.fmb') # type: ignore
+    return os.path.join(self.currentFolder, '.fmb') # pylint: disable=no-member
 
   @property
   def settings_file_name(self):

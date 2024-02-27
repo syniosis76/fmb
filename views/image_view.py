@@ -1,20 +1,20 @@
-from ffpyplayer import player
+import os
+import time
+import threading
+
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
-from kivy.metrics import sp
-from kivy.graphics.texture import Texture
+from kivy.graphics.texture import Texture # pylint: disable=no-name-in-module
 from kivy.uix.image import Image
 from kivy.uix.video import Video
 from kivy.core.window import Window, Keyboard
 from kivy.animation import Animation
 from kivy.clock import Clock
+from kivy.logger import Logger
 from PIL import Image as PILImage
 
-import os
-import time
-import threading
-from kivy.logger import Logger
+from models.data import Data
 
 from utilities import video_frame
 from utilities import exifhandler
@@ -26,25 +26,26 @@ class fmb_video(Video):
     def texture_update(self, *largs):
         pass
 
-class image_view(Screen):        
+class image_view(Screen):
     def __init__(self, **kwargs):
-        super(image_view, self).__init__(**kwargs) 
-        
-        from main import fmb_app # import here to avoid circular reference and allow type safety
+        super(image_view, self).__init__(**kwargs)
+
+        # import here to avoid circular reference and allow type safety
+        from main import fmb_app # pylint: disable=import-outside-toplevel
 
         self.app: fmb_app = App.get_running_app()
-        self.data: Data = self.app.data  # type: ignore
+        self.data: Data = self.app.data # pylint: disable=no-member
 
         self.current_video = None
         self.currentFrameRate = None
-        self.no_back = False    
+        self.no_back = False
 
         self.seeked_frames = 0
         self.restart_position = None
 
         self.video_trim_start = 0
 
-        Window.bind(on_resize=self.on_window_resize)        
+        Window.bind(on_resize=self.on_window_resize)
         Window.bind(on_key_down=self.on_key_down)
         Window.bind(on_key_up=self.on_key_up)
         Window.bind(mouse_pos=self.on_mouse_pos)
@@ -54,14 +55,14 @@ class image_view(Screen):
         fade_in_duration = 0.5
         fade_out_duration = 1.0
         fade_timout_duration = 3.0
-        self.fade_in_animation = Animation(opacity=0.8, duration=fade_in_duration)               
+        self.fade_in_animation = Animation(opacity=0.8, duration=fade_in_duration)
         self.fade_out_animation = Animation(opacity=0, duration=fade_out_duration)
         self.fade_out_trigger = Clock.create_trigger(self.on_fade_out_trigger, timeout=fade_timout_duration, interval=False, release_ref=False)
 
         toast_fade_in_duration = 0.2
         toast_fade_out_duration = 1.0
         toast_fade_timout_duration = 3.0
-        self.toast_fade_in_animation = Animation(opacity=1.0, duration=toast_fade_in_duration)               
+        self.toast_fade_in_animation = Animation(opacity=1.0, duration=toast_fade_in_duration)
         self.toast_fade_out_animation = Animation(opacity=0, duration=toast_fade_out_duration)
         self.toast_fade_out_trigger = Clock.create_trigger(self.on_toast_fade_out_trigger, timeout=toast_fade_timout_duration, interval=False, release_ref=False)
 
@@ -70,7 +71,7 @@ class image_view(Screen):
         if self.current_video == None:
             self.loadMedia()
 
-    def on_enter(self):               
+    def on_enter(self):
         self.loadMedia()
         self.fade_in_overlay()
 
@@ -82,11 +83,11 @@ class image_view(Screen):
             if len(parts) == 2:
                 extension = parts[1].lower()
 
-                if extension in self.app.data.imageTypes:        
-                    self.showImage(path)              
+                if extension in self.app.data.imageTypes:
+                    self.showImage(path)
                 elif extension in self.app.data.videoTypes:
-                    self.showVideo(path)                
-          
+                    self.showVideo(path)
+
     def showImage(self, path):
         self.ids.video_controls.opacity = 0
         self.ids.edit_button.opacity = 1
@@ -96,9 +97,9 @@ class image_view(Screen):
 
         image_grid = self.ids.image_grid
 
-        #startTime = time.process_time() 
+        #startTime = time.process_time()
 
-        pilImage = PILImage.open(path)        
+        pilImage = PILImage.open(path)
 
         orientation = exifhandler.get_orientation(pilImage)
 
@@ -118,19 +119,19 @@ class image_view(Screen):
             newHeight = int(displayWidth / ratio)
         else:
             newHeight = int(displayHeight)
-            newWidth = int(displayHeight * ratio)            
-        
+            newWidth = int(displayHeight * ratio)
+
         pilImage.draft("RGB", (newWidth, newHeight))
         #pilImage.resize((newWidth, newHeight), PILImage.BICUBIC)
 
         pilImage = exifhandler.auto_rotate_image(pilImage)
 
         pilImage = pilImage.convert('RGBA')
-        bytes = pilImage.tobytes()        
+        bytes = pilImage.tobytes()
         texture = Texture.create(size = pilImage.size)
-        texture.blit_buffer(bytes, colorfmt='rgba', bufferfmt='ubyte')        
+        texture.blit_buffer(bytes, colorfmt='rgba', bufferfmt='ubyte')
         texture.flip_vertical()
-                
+
         image = Image()
         image.texture = texture
 
@@ -138,23 +139,25 @@ class image_view(Screen):
         #print(endTime - startTime)
 
         #image.fit_mode = 'contain'
-        image_grid.add_widget(image)   
-           
+        image_grid.add_widget(image)
+
     def showVideo(self, path, restart=False):
+
+        Logger.info('showVideo1')
         self.stop_current_video()
 
         if not restart and self.current_video != None:
             video = self.current_video
         else:
-            self.clear_image_widget()         
+            self.clear_image_widget()
             image_grid = self.ids.image_grid
-        
+
             video = fmb_video()
-            image_grid.add_widget(video)       
-            video.bind(position=self.on_position_change) # type: ignore
-            video.bind(duration=self.on_duration_change) # type: ignore
-            video.bind(state=self.on_state_change) # type: ignore
-            video.bind(loaded=self.on_loaded) # type: ignore
+            image_grid.add_widget(video)
+            video.bind(position=self.on_position_change) # pylint: disable=no-member
+            video.bind(duration=self.on_duration_change) # pylint: disable=no-member
+            video.bind(state=self.on_state_change) # pylint: disable=no-member
+            video.bind(loaded=self.on_loaded) # pylint: disable=no-member
             video.fit_mode = 'contain'
             self.current_video = video
             self.currentFrameRate = 30
@@ -162,14 +165,14 @@ class image_view(Screen):
         try:
             video.source = path
 
-            self.video_trim_start = 0
+            self.set_video_trim_start(0)
 
             self.ids.edit_button.opacity = 0
             self.ids.video_controls.opacity = 1
 
-            video.state = 'play' 
-        except Exception as e:
-            Logger.exception('Error Playing Video - %S', e)                   
+            video.state = 'play'
+        except Exception: # pylint: disable=broad-exception-caught
+            Logger.exception('Error Playing Video')
 
     def clear_image_widget(self):
         image_grid = self.ids.image_grid
@@ -178,7 +181,7 @@ class image_view(Screen):
 
     def stop_current_video(self):
         if self.current_video != None:
-            self.current_video.state = 'stop'            
+            self.current_video.state = 'stop'
             self.current_video.unload()
 
     def clear_image(self):
@@ -189,7 +192,7 @@ class image_view(Screen):
     def go_back(self):
         if self.no_back:
             self.no_back = False
-        else:            
+        else:
             Window.show_cursor = True
 
             self.stop_current_video()
@@ -200,33 +203,33 @@ class image_view(Screen):
 
         return True
 
-    def change_image(self, offset):        
+    def change_image(self, offset):
         if self.app.thumbnail_view.change_image(offset):
             self.loadMedia()
 
     def previous_image(self):
         self.change_image(1)
         return True
-    
+
     def next_image(self):
-        self.change_image(-1)    
+        self.change_image(-1)
         return True
 
     def toggle_play_pause(self):
         if self.current_video:
-            video = self.current_video            
+            video = self.current_video
             if video.state == 'play':
-                newstate = 'pause'                
-            else:                
+                newstate = 'pause'
+            else:
                 newstate = 'play'
-            
+
             Logger.info('Play/Pause ' + video.state + ' to ' + newstate)
-            
+
             self.set_video_state(newstate)
             video.state = newstate
 
             return True
-        
+
         return False
 
     def set_video_state(self, state):
@@ -239,20 +242,20 @@ class image_view(Screen):
 
     def restart_video(self, resume):
         if self.current_video:
-            self.seeked_frames = 0            
+            self.seeked_frames = 0
 
             video = self.current_video
-                    
+
             self.restart_position = video.position / video.duration
 
-            path = self.app.thumbnail_view.currentFile.path # type: ignore
+            path = self.app.thumbnail_view.currentFile.path # pylint: disable=no-member
             self.showVideo(path, True)
 
     def on_loaded(self, object, value):
         if value and self.current_video and self.restart_position != None:
             restart_position = self.restart_position
             self.restart_position = None
-            
+
             self.current_video.seek(restart_position, precise = False)
 
     def edit_image(self):
@@ -266,9 +269,9 @@ class image_view(Screen):
             self.manager.current = 'image_editor'
 
             return True
-        
+
         return False
-    
+
     def delete(self):
         self.app.thumbnail_view.delete_current()
         self.loadMedia()
@@ -277,14 +280,14 @@ class image_view(Screen):
         if self.current_video:
             video = self.current_video
             duration = video.duration
-            position = video.position            
+            position = video.position
             newPosition = position + seconds
 
             if newPosition < 0:
                 newPosition = 0
             elif newPosition > duration:
-                newPosition = duration                        
-            
+                newPosition = duration
+
             if newPosition < duration:
                 newPositionPercent = newPosition / duration
             else:
@@ -299,13 +302,13 @@ class image_view(Screen):
                 video.seek(newPositionPercent, precise = False)
 
     def videoNextFrame(self):
-        if self.current_video:            
+        if self.current_video:
             video = self.current_video
             if video.state == 'pause':
                 ffVideo = video._video
-                ffplayer = ffVideo._ffplayer # type: ignore             
+                ffplayer = ffVideo._ffplayer # pylint: disable=no-member
                 ffplayer.set_pause(False)
-                try:                                    
+                try:
                     frame = None
                     while not frame:
                         frame, value = ffplayer.get_frame()
@@ -313,9 +316,9 @@ class image_view(Screen):
                             time.sleep(0.005)
                         if value in ('paused', 'eof'):
                             break
-                    if frame:                        
-                        ffVideo._next_frame = frame # type: ignore
-                        ffVideo._trigger() # type: ignore
+                    if frame:
+                        ffVideo._next_frame = frame # pylint: disable=no-member
+                        ffVideo._trigger() # pylint: disable=no-member
                 finally:
                     ffplayer.set_pause(True)
                     self.seeked_frames += 1
@@ -326,10 +329,10 @@ class image_view(Screen):
             if video.state == 'pause':
                 self.show_toast('Saving Video Frame')
                 ff_video = video._video
-                frame = ff_video._next_frame # type: ignore
+                frame = ff_video._next_frame # pylint: disable=no-member
                 image = video_frame.get_frame_image(frame[0])
 
-                path = self.app.thumbnail_view.currentFile.path # type: ignore
+                path = self.app.thumbnail_view.currentFile.path # pylint: disable=no-member
 
                 parts = os.path.splitext(path)
 
@@ -343,15 +346,20 @@ class image_view(Screen):
                 image.save(frame_path, format='jpeg')
                 self.app.thumbnail_view.insert_thumbnail(frame_path)
 
+    def set_video_trim_start(self, start):
+        self.video_trim_start = start
+        Logger.info(f'Set video_trim_start to {self.video_trim_start}')
+
     def video_set_trim_start(self):
-        if self.current_video and self.current_video.position != None:
+        if self.current_video and self.current_video.position is not None:
             self.show_toast('Set Trim Start Position')
-            self.video_trim_start = self.current_video.position            
+            self.set_video_trim_start(self.current_video.position)
 
     def video_trim(self):
         if self.current_video:
             self.show_toast('Saving Trimmed Video')
-            self.video_extract_section(self.video_trim_start, self.current_video.position)            
+            Logger.info(f'Trim video from {self.video_trim_start} to {self.current_video.position}')
+            self.video_extract_section(self.video_trim_start, self.current_video.position)
 
     def video_restart(self):
         if self.current_video:
@@ -359,16 +367,16 @@ class image_view(Screen):
 
     def video_extract_section(self, start, end):
         if self.current_video:
-            source = self.app.thumbnail_view.currentFile.path # type: ignore            
-            
-            thread = threading.Thread(target=lambda: self.video_extract_section_thread(source, start, end))        
-            thread.start()            
+            source = self.app.thumbnail_view.currentFile.path # pylint: disable=no-member
+
+            thread = threading.Thread(target=lambda: self.video_extract_section_thread(source, start, end))
+            thread.start()
 
     def video_extract_section_thread(self, source, start, end):
         Logger.info(f'Trim Video {source} from {start} to {end}.')
 
         parts = os.path.splitext(source)
-        extension = parts[1].lower()            
+        extension = parts[1].lower()
 
         suffixNumber = 1
         while (True):
@@ -377,7 +385,7 @@ class image_view(Screen):
                 break
             suffixNumber = suffixNumber + 1
 
-        ffmpeg_tools.trim(source, target, start, end)        
+        ffmpeg_tools.trim(source, target, start, end)
 
         Logger.info(f'Trim Video {source} from {start} to {end} completed.')
 
@@ -389,23 +397,23 @@ class image_view(Screen):
             progress.value = value /  self.current_video.duration * progress.max
 
     def on_duration_change(self, instance, value):
-        pass #print('The duration of the video is', value)       
+        pass #print('The duration of the video is', value)
 
     def on_state_change(self, instance, value):
         if self.current_video and value == 'play':
             self.ids.play_pause_button.source = 'images\\pause.png'
         else:
             self.ids.play_pause_button.source = 'images\\play.png'
-                
-    def fade_out_overlay(self):        
-        if self.manager.current == 'image_view' and self.ids.overlay.opacity > 0 and not self.fade_out_animation.have_properties_to_animate(self.ids.overlay):            
+
+    def fade_out_overlay(self):
+        if self.manager.current == 'image_view' and self.ids.overlay.opacity > 0 and not self.fade_out_animation.have_properties_to_animate(self.ids.overlay):
             self.fade_in_animation.cancel(self.ids.overlay)
             self.fade_out_animation.start(self.ids.overlay)
             Window.show_cursor = False
-    
+
     def fade_in_overlay(self):
         self.start_overlay_timeout()
-        if self.ids.overlay.opacity < 0.8 and not self.fade_in_animation.have_properties_to_animate(self.ids.overlay):            
+        if self.ids.overlay.opacity < 0.8 and not self.fade_in_animation.have_properties_to_animate(self.ids.overlay):
             self.fade_out_animation.cancel(self.ids.overlay)
             self.fade_in_animation.start(self.ids.overlay)
             Window.show_cursor = True
@@ -429,8 +437,8 @@ class image_view(Screen):
             , (self.ids.edit_button, self.edit_image)]
 
     def on_touch_down(self, touch):
-        self.fade_in_overlay()    
-    
+        self.fade_in_overlay()
+
     def on_touch_up(self, touch):
         touch.push()
         try:
@@ -440,28 +448,28 @@ class image_view(Screen):
             if self.current_video and progress.collide_point(*touch.pos):
                 touch.apply_transform_2d(progress.to_local)
                 position = touch.pos[0] / progress.width
-                self.seek_to_position(position)                
+                self.seek_to_position(position)
 
                 return True
-            else:            
+            else:
                 for (button, callback) in self.buttons:
-                    if button.collide_point(*touch.pos):                
+                    if button.collide_point(*touch.pos):
                         if callback():
-                            return True                            
-                
+                            return True
+
                 return False
         finally:
-            touch.pop()      
+            touch.pop()
 
-    def on_key_down(self, window, keycode, text, modifiers, x):        
+    def on_key_down(self, window, keycode, text, modifiers, x):
         if self.manager.current == self.name:
             #print('image_view Key Down: ' + str(keycode))
             # Navigation
             if keycode == Keyboard.keycodes['escape']:
-                self.go_back()            
+                self.go_back()
             elif keycode in [Keyboard.keycodes['left'], Keyboard.keycodes['numpad4']]:
                 self.change_image(1)
-            elif keycode in [Keyboard.keycodes['right'], Keyboard.keycodes['numpad6']]:                
+            elif keycode in [Keyboard.keycodes['right'], Keyboard.keycodes['numpad6']]:
                 self.change_image(-1)
             elif keycode in [Keyboard.keycodes['home']]:
                 self.change_image(1000000) # Big number will stop at the first image (highest index).
@@ -478,7 +486,7 @@ class image_view(Screen):
                 self.video_seek_by_seconds(10)
             elif keycode in [Keyboard.keycodes[';'], Keyboard.keycodes['numpad7']]:
                 self.video_seek_by_seconds(-1)
-            elif keycode in [Keyboard.keycodes['\''], Keyboard.keycodes['numpad9']]:            
+            elif keycode in [Keyboard.keycodes['\''], Keyboard.keycodes['numpad9']]:
                 self.videoNextFrame()
             elif keycode in [Keyboard.keycodes['f']]:
                 self.video_extract_frame()
@@ -492,9 +500,9 @@ class image_view(Screen):
                 self.toggle_full_screen()
 
             return True
-        
+
         return False
-    
+
     def on_key_up(self, window, keycode, text):
         pass
         #if self.manager.current == self.name:
@@ -507,22 +515,22 @@ class image_view(Screen):
         else:
             Window.fullscreen = False
             self.ids.full_screen_button.source = 'images\\fullscreen.png'
-        
+
         return True
-    
+
     def seek_to_position(self, position):
-        if self.current_video:            
+        if self.current_video:
             if self.current_video.state not in ['play', 'pause']:
                 self.toggle_play_pause()
             self.current_video.seek(position, False)
 
             return True
-        
+
         return False
-    
+
     def show_toast(self, text):
         self.toast_fade_out_trigger.cancel()
-        
+
         toast_label = self.ids.toast_label
         toast_label.text = text
 
