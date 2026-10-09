@@ -31,3 +31,26 @@ class MediaFile():
         if len(parts) == 2:
             return parts[1].lower()            
         return None
+  
+  @property
+  def proxy_path(self):
+    parts = os.path.splitext(self.path)
+    if len(parts) == 2:
+      # DJI LRF File
+      proxy_path = parts[0] + '.lrf'
+      if os.path.exists(proxy_path):
+         return proxy_path
+      
+      # GoPro LRV File
+      proxy_path = parts[0] + '.lrv'
+      if os.path.exists(proxy_path):
+         return proxy_path
+    
+    return None  
+    
+  @property
+  def proxy_or_path(self):
+    path = self.proxy_path
+    if path:
+       return path
+    return self.path

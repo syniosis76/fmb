@@ -1,5 +1,4 @@
 import os
-import time
 import threading
 
 from kivy.app import App
@@ -7,7 +6,6 @@ from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
 from kivy.graphics.texture import Texture # pylint: disable=no-name-in-module
 from kivy.uix.image import Image
-from kivy.uix.video import Video
 from kivy.core.window import Window, Keyboard
 from kivy.animation import Animation
 from kivy.clock import Clock
@@ -16,15 +14,11 @@ from PIL import Image as PILImage
 
 from models.data import Data
 
-from utilities import video_frame
+from widgets.mpv_video import MpvVideo
 from utilities import exifhandler
 from utilities import ffmpeg_tools
 
 Builder.load_file('views/image_view.kv')
-
-class fmb_video(Video):
-    def texture_update(self, *largs):
-        pass
 
 class image_view(Screen):
     def __init__(self, **kwargs):
@@ -77,16 +71,16 @@ class image_view(Screen):
 
     def loadMedia(self):
         if self.app.thumbnail_view.currentFile:
-            path = self.app.thumbnail_view.currentFile.path
+            current_file = self.app.thumbnail_view.currentFile
 
-            parts = os.path.splitext(path)
+            parts = os.path.splitext(current_file.path)
             if len(parts) == 2:
                 extension = parts[1].lower()
 
                 if extension in self.app.data.imageTypes:
-                    self.showImage(path)
+                    self.showImage(current_file.path)
                 elif extension in self.app.data.videoTypes:
-                    self.showVideo(path)
+                    self.show_video(current_file.proxy_or_path)
 
     def showImage(self, path):
         self.ids.video_controls.opacity = 0
@@ -141,9 +135,9 @@ class image_view(Screen):
         #image.fit_mode = 'contain'
         image_grid.add_widget(image)
 
-    def showVideo(self, path, restart=False):
+    def show_video(self, path, restart=False):
 
-        Logger.info('showVideo1')
+        Logger.info(f'show_video {path}')
         self.stop_current_video()
 
         if not restart and self.current_video != None:
@@ -152,15 +146,13 @@ class image_view(Screen):
             self.clear_image_widget()
             image_grid = self.ids.image_grid
 
-            video = fmb_video()
+            video = MpvVideo()
             image_grid.add_widget(video)
             video.bind(position=self.on_position_change) # pylint: disable=no-member
             video.bind(duration=self.on_duration_change) # pylint: disable=no-member
             video.bind(state=self.on_state_change) # pylint: disable=no-member
             video.bind(loaded=self.on_loaded) # pylint: disable=no-member
-            video.fit_mode = 'contain'
             self.current_video = video
-            self.currentFrameRate = 30
 
         try:
             video.source = path
@@ -234,11 +226,7 @@ class image_view(Screen):
 
     def set_video_state(self, state):
         if self.current_video:
-            video = self.current_video
-            if video.state == 'pause' and state == 'play' and self.seeked_frames > 10:
-                self.restart_video(True) # resume
-            else:
-                video.state = state
+            self.current_video.state = state
 
     def restart_video(self, resume):
         if self.current_video:
@@ -248,8 +236,8 @@ class image_view(Screen):
 
             self.restart_position = video.position / video.duration
 
-            path = self.app.thumbnail_view.currentFile.path # pylint: disable=no-member
-            self.showVideo(path, True)
+            path = self.app.thumbnail_view.currentFile.proxy_or_path # pylint: disable=no-member
+            self.show_video(path, True)
 
     def on_loaded(self, object, value):
         if value and self.current_video and self.restart_position != None:
@@ -281,6 +269,10 @@ class image_view(Screen):
             video = self.current_video
             duration = video.duration
             position = video.position
+
+            if not duration:
+                return
+
             newPosition = position + seconds
 
             if newPosition < 0:
@@ -305,34 +297,20 @@ class image_view(Screen):
         if self.current_video:
             video = self.current_video
             if video.state == 'pause':
-                ffVideo = video._video
-                ffplayer = ffVideo._ffplayer # pylint: disable=no-member
-                ffplayer.set_pause(False)
-                try:
-                    frame = None
-                    while not frame:
-                        frame, value = ffplayer.get_frame()
-                        if not frame:
-                            time.sleep(0.005)
-                        if value in ('paused', 'eof'):
-                            break
-                    if frame:
-                        ffVideo._next_frame = frame # pylint: disable=no-member
-                        ffVideo._trigger() # pylint: disable=no-member
-                finally:
-                    ffplayer.set_pause(True)
-                    self.seeked_frames += 1
+                video.frame_step()
+                self.seeked_frames += 1
 
     def video_extract_frame(self):
         if self.current_video:
             video = self.current_video
+            position = video.position
+
+            Logger.info(f'Extract Frame {position}')
             if video.state == 'pause':
                 self.show_toast('Saving Video Frame')
-                ff_video = video._video
-                frame = ff_video._next_frame # pylint: disable=no-member
-                image = video_frame.get_frame_image(frame[0])
 
                 path = self.app.thumbnail_view.currentFile.path # pylint: disable=no-member
+                proxy_path = self.app.thumbnail_view.currentFile.proxy_path
 
                 parts = os.path.splitext(path)
 
@@ -343,8 +321,13 @@ class image_view(Screen):
                         break
                     suffixNumber = suffixNumber + 1
 
-                image.save(frame_path, format='jpeg')
-                self.app.thumbnail_view.insert_thumbnail(frame_path)
+                thread = threading.Thread(target=lambda: self.video_extract_frame_thread(path, proxy_path, frame_path, position))
+                thread.start()
+                
+
+    def video_extract_frame_thread(self, path, proxy_path, frame_path, current_video_position):
+        ffmpeg_tools.extract_frame(path, proxy_path, frame_path, current_video_position)        
+        self.app.thumbnail_view.insert_thumbnail(frame_path)   
 
     def set_video_trim_start(self, start):
         self.video_trim_start = start
@@ -392,9 +375,9 @@ class image_view(Screen):
         self.app.thumbnail_view.insert_thumbnail(target)
 
     def on_position_change(self, instance, value):
-        if self.current_video:
+        if self.current_video and self.current_video.duration:
             progress = self.ids.progress
-            progress.value = value /  self.current_video.duration * progress.max
+            progress.value = value / self.current_video.duration * progress.max
 
     def on_duration_change(self, instance, value):
         pass #print('The duration of the video is', value)
@@ -496,6 +479,8 @@ class image_view(Screen):
                 self.video_trim()
             elif keycode in [Keyboard.keycodes['r']]:
                 self.video_restart()
+            elif keycode == Keyboard.keycodes['f8']:
+                self.toggle_video_speed(8)
             elif keycode == Keyboard.keycodes['f11']:
                 self.toggle_full_screen()
 
@@ -527,6 +512,20 @@ class image_view(Screen):
             return True
 
         return False
+    
+    def toggle_video_speed(self, speed):
+        if self.current_video:
+            if self.current_video.speed == 1.0:
+                self.current_video.speed = float(speed)
+            else:
+                self.current_video.speed = 1.0
+            return True
+
+        return False
+
+    def close(self):
+        self.stop_current_video()
+        self.clear_image()    
 
     def show_toast(self, text):
         self.toast_fade_out_trigger.cancel()

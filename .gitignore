@@ -5,3 +5,5 @@
 *.log
 /widgets/__pycache__
 /__pycache__
+/libmpv/*.dll
+/libmpv/*.tmp

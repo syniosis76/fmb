@@ -3,6 +3,7 @@ pip install pillow-lut --upgrade
 pip install send2trash --upgrade
 pip install ffpyplayer --upgrade
 pip install ffmpeg-python --upgrade
+pip install mpv --upgrade
 pip install kivy_deps.sdl2 --upgrade
 pip install kivy_deps.glew --upgrade
 pip install kivy --upgrade

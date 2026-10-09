@@ -16,6 +16,7 @@ from kivy.core.window import Window, Keyboard
 from send2trash import send2trash
 
 import os
+import sys
 import threading
 import json
 from kivy.logger import Logger
@@ -242,7 +243,11 @@ class thumbnail_view(Screen):
                 thumbnail = Thumbnail(file)
                 thumbnail.initialiseThumbnail()
                 file.thumbnailPath = thumbnail.thumbnailPath
-                coreImage = CoreImage(thumbnail.thumbnailPath)
+                try:
+                    coreImage = CoreImage(thumbnail.thumbnailPath)
+                except:
+                    print(sys.exc_info()[0])
+                    coreImage = None    
                 self.add_thumbnail(thumbnailGrid, file, coreImage, None)
 
         self.version = self.data.version
@@ -489,7 +494,12 @@ class thumbnail_view(Screen):
         self.ids.thumbnailGrid.remove_widget(widget)
 
     def delete_file(self, file):
+        Logger.info(f'Delete {file.thumbnailPath}')
         os.remove(file.thumbnailPath)
+        if file.proxy_path:
+            Logger.info(f'Delete {file.proxy_path}')
+            send2trash(file.proxy_path)
+        Logger.info(f'Delete {file.path}')
         send2trash(file.path)
 
     @mainthread
@@ -509,7 +519,12 @@ class thumbnail_view(Screen):
             self.trigger_save_layout()        
     
     def delete_current_thread(self, file):        
+        Logger.info(f'Delete {file.thumbnailPath}')
         os.remove(file.thumbnailPath)
+        if file.proxy_path:
+            Logger.info(f'Delete {file.proxy_path}')
+            send2trash(file.proxy_path)
+        Logger.info(f'Delete {file.path}')
         send2trash(file.path)
 
     def open_home_folder_click(self):

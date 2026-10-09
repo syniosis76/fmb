@@ -2,7 +2,6 @@ import utilities.loghandler
 
 import os
 os.environ['KIVY_WINDOW'] = 'sdl2'
-os.environ['KIVY_VIDEO'] = 'ffpyplayer'
 
 import kivy
 kivy.require('2.0.0')
@@ -76,6 +75,7 @@ class fmb_app(App):
 
     def on_stop(self):
         self.closing = True
+        self.image_view.close()
 
     def on_maximize(self, *largs):
         self.maximized = True

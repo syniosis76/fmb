@@ -36,8 +36,10 @@ class Thumbnail():
       else:
         try:
           # Generate a Video Thumbail to a temporary file in the PNG format.
-          thumbnail_file_png = self.thumbnailPath + '.png'          
-          ffmpeg_tools.generate_thumbnail(self.mediaFile.path, thumbnail_file_png, self.data.thumbnailWidth, self.data.thumbnailHeight)
+          thumbnail_file_png = self.thumbnailPath + '.png'
+          path = self.mediaFile.proxy_or_path
+
+          ffmpeg_tools.generate_thumbnail(path, thumbnail_file_png, self.data.thumbnailWidth, self.data.thumbnailHeight)
           image = Image.open(thumbnail_file_png)
           image.load()
           # Remove the temprary file.
