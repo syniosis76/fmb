@@ -45,6 +45,7 @@ class image_view(Screen):
         Window.bind(mouse_pos=self.on_mouse_pos)
 
         self.setup_buttons()
+        self.update_proxy_button()
 
         fade_in_duration = 0.5
         fade_out_duration = 1.0
@@ -67,6 +68,7 @@ class image_view(Screen):
 
     def on_enter(self):
         self.loadMedia()
+        self.update_proxy_button()
         self.fade_in_overlay()
 
     def loadMedia(self):
@@ -80,7 +82,13 @@ class image_view(Screen):
                 if extension in self.app.data.imageTypes:
                     self.showImage(current_file.path)
                 elif extension in self.app.data.videoTypes:
-                    self.show_video(current_file.proxy_or_path)
+                    self.show_video(self.video_source_path(current_file))
+
+    def video_source_path(self, media_file):
+        if self.app.data.useProxy:
+            return media_file.proxy_or_path
+        return media_file.path
+
 
     def showImage(self, path):
         self.ids.video_controls.opacity = 0
@@ -236,7 +244,7 @@ class image_view(Screen):
 
             self.restart_position = video.position / video.duration
 
-            path = self.app.thumbnail_view.currentFile.proxy_or_path # pylint: disable=no-member
+            path = self.video_source_path(self.app.thumbnail_view.currentFile) # pylint: disable=no-member
             self.show_video(path, True)
 
     def on_loaded(self, object, value):
@@ -417,7 +425,24 @@ class image_view(Screen):
             , (self.ids.next_button, self.next_image)
             , (self.ids.full_screen_button, self.toggle_full_screen)
             , (self.ids.play_pause_button, self.toggle_play_pause)
+            , (self.ids.proxy_button, self.toggle_proxy)
             , (self.ids.edit_button, self.edit_image)]
+
+    def update_proxy_button(self):
+        if self.app.data.useProxy:
+            self.ids.proxy_button.source = 'images\\proxy-on.png'
+        else:
+            self.ids.proxy_button.source = 'images\\proxy-off.png'
+
+    def toggle_proxy(self):
+        self.app.data.useProxy = not self.app.data.useProxy
+        self.app.data.save()
+        self.update_proxy_button()
+        self.show_toast('Use Proxy ' + ('On' if self.app.data.useProxy else 'Off'))
+        self.loadMedia()
+
+        return True
+
 
     def on_touch_down(self, touch):
         self.fade_in_overlay()

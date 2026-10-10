@@ -27,6 +27,7 @@ class Data():
     self.folderHeight = sp(30)
     self.videoThumbnailOverlay = None
     self.window_position = {}
+    self.useProxy = False
   
     self.loadData()     
 
@@ -43,6 +44,7 @@ class Data():
         self.folders = data.get('folders', self.folders)        
         self.foldersWidth = data.get('foldersWidth', self.foldersWidth) 
         self.window_position = data.get('window_position', self.window_position) 
+        self.useProxy = data.get('useProxy', self.useProxy) 
 
   def save(self):
     data = {}
@@ -51,6 +53,7 @@ class Data():
     data['folders'] = self.folders
     data['foldersWidth'] = self.foldersWidth
     data['window_position'] = self.window_position
+    data['useProxy'] = self.useProxy
 
     os.makedirs(self.settingsPath, exist_ok=True)
 
