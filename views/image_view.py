@@ -6,6 +6,9 @@ from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
 from kivy.graphics.texture import Texture # pylint: disable=no-name-in-module
 from kivy.uix.image import Image
+from kivy.uix.button import Button
+from kivy.uix.dropdown import DropDown
+from kivy.metrics import sp
 from kivy.core.window import Window, Keyboard
 from kivy.animation import Animation
 from kivy.clock import Clock
@@ -19,6 +22,8 @@ from utilities import exifhandler
 from utilities import ffmpeg_tools
 
 Builder.load_file('views/image_view.kv')
+
+SPEED_OPTIONS = [0.5, 1.0, 1.5, 2.0, 4.0, 8.0]
 
 class image_view(Screen):
     def __init__(self, **kwargs):
@@ -47,6 +52,7 @@ class image_view(Screen):
         Window.bind(mouse_pos=self.on_mouse_pos)
 
         self.setup_buttons()
+        self.setup_speed_dropdown()
         self.update_proxy_button()
 
         fade_in_duration = 0.5
@@ -162,6 +168,7 @@ class image_view(Screen):
             video.bind(duration=self.on_duration_change) # pylint: disable=no-member
             video.bind(state=self.on_state_change) # pylint: disable=no-member
             video.bind(loaded=self.on_loaded) # pylint: disable=no-member
+            video.bind(speed=self.on_speed_change) # pylint: disable=no-member
             self.current_video = video
 
         try:
@@ -174,6 +181,7 @@ class image_view(Screen):
 
             video.state = self.pending_video_state or 'play'
             self.pending_video_state = None
+            self.on_speed_change(video, video.speed)
         except Exception: # pylint: disable=broad-exception-caught
             Logger.exception('Error Playing Video')
 
@@ -444,8 +452,35 @@ class image_view(Screen):
             , (self.ids.next_button, self.next_image)
             , (self.ids.full_screen_button, self.toggle_full_screen)
             , (self.ids.play_pause_button, self.toggle_play_pause)
+            , (self.ids.speed_button, self.open_speed_menu)
             , (self.ids.proxy_button, self.toggle_proxy)
             , (self.ids.edit_button, self.edit_image)]
+
+    def setup_speed_dropdown(self):
+        self.speed_dropdown = DropDown(auto_width=False, width=sp(64))
+        for speed in SPEED_OPTIONS:
+            button = Button(text=f'{speed:.1f}x', size_hint_y=None, height=sp(30),
+                            background_normal='', background_down='',
+                            background_color=(0.2, 0.2, 0.2, 1))
+            button.bind(on_release=lambda instance, value=speed: self.speed_dropdown.select(value))
+            self.speed_dropdown.add_widget(button)
+        self.speed_dropdown.bind(on_select=self.on_speed_selected)
+
+    def on_speed_selected(self, dropdown, speed):
+        self.set_video_speed(speed)
+
+    def set_video_speed(self, speed):
+        if self.current_video:
+            self.current_video.speed = float(speed)
+            self.show_toast(f'Speed {speed:.1f}x')
+
+    def on_speed_change(self, instance, value):
+        self.ids.speed_label.text = f'{value:.1f}x'
+
+    def open_speed_menu(self):
+        self.speed_dropdown.open(self.ids.speed_button)
+        return True
+
 
     def update_proxy_button(self):
         if self.app.data.useProxy:
@@ -572,10 +607,8 @@ class image_view(Screen):
     
     def toggle_video_speed(self, speed):
         if self.current_video:
-            if self.current_video.speed == 1.0:
-                self.current_video.speed = float(speed)
-            else:
-                self.current_video.speed = 1.0
+            new_speed = 1.0 if self.current_video.speed != 1.0 else float(speed)
+            self.set_video_speed(new_speed)
             return True
 
         return False

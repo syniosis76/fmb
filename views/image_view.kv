@@ -84,6 +84,22 @@
 				size: 30, 30
 				source: 'images\\play.png'	
 			Label:
+				id: speed_label
+				text: '1.0x'
+				pos: root.width - 98, 80
+				size_hint: None, None
+				size: 56, 26
+				font_size: '16sp'
+				halign: 'right'
+				valign: 'middle'
+				text_size: self.size
+			Image:
+				id: speed_button
+				pos: root.width - 36, 78
+				size_hint: None, None
+				size: 30, 30
+				source: 'images\\speed.png'
+			Label:
 				id: proxy_label
 				text: 'Use Proxy'
 				pos: root.width - 120, 44
