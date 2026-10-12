@@ -17,6 +17,9 @@ from kivy.core.window import Window
 
 from models.data import Data
 
+from utilities import mpv_thumbnail
+from utilities import window_chrome
+
 from views.thumbnail_view import thumbnail_view
 from views.image_view import image_view
 from views.image_editor import image_editor
@@ -72,10 +75,13 @@ class fmb_app(App):
 
     def on_start(self):
         self.restore_window_position()
+        # Match the window title bar to the left folder panel (Windows 11 only).
+        window_chrome.set_title_bar_colour(0x252526, 0xFFFFFF)
 
     def on_stop(self):
         self.closing = True
         self.image_view.close()
+        mpv_thumbnail.shutdown()
 
     def on_maximize(self, *largs):
         self.maximized = True

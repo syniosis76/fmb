@@ -36,8 +36,10 @@ class image_view(Screen):
 
         self.seeked_frames = 0
         self.restart_position = None
+        self.pending_video_state = None
 
         self.video_trim_start = 0
+        self.video_trim_start_fraction = 0.0
 
         Window.bind(on_resize=self.on_window_resize)
         Window.bind(on_key_down=self.on_key_down)
@@ -170,7 +172,8 @@ class image_view(Screen):
             self.ids.edit_button.opacity = 0
             self.ids.video_controls.opacity = 1
 
-            video.state = 'play'
+            video.state = self.pending_video_state or 'play'
+            self.pending_video_state = None
         except Exception: # pylint: disable=broad-exception-caught
             Logger.exception('Error Playing Video')
 
@@ -252,7 +255,8 @@ class image_view(Screen):
             restart_position = self.restart_position
             self.restart_position = None
 
-            self.current_video.seek(restart_position, precise = False)
+            Logger.info(f'on_loaded: resuming at {restart_position:.4f}')
+            self.current_video.seek(restart_position, precise = True)
 
     def edit_image(self):
         if not self.current_video:
@@ -311,15 +315,14 @@ class image_view(Screen):
     def video_extract_frame(self):
         if self.current_video:
             video = self.current_video
+            duration = video.duration
             position = video.position
 
             Logger.info(f'Extract Frame {position}')
-            if video.state == 'pause':
+            if video.state == 'pause' and duration:
                 self.show_toast('Saving Video Frame')
 
                 path = self.app.thumbnail_view.currentFile.path # pylint: disable=no-member
-                proxy_path = self.app.thumbnail_view.currentFile.proxy_path
-
                 parts = os.path.splitext(path)
 
                 suffixNumber = 1
@@ -329,56 +332,72 @@ class image_view(Screen):
                         break
                     suffixNumber = suffixNumber + 1
 
-                thread = threading.Thread(target=lambda: self.video_extract_frame_thread(path, proxy_path, frame_path, position))
+                fraction = position / duration
+                thread = threading.Thread(target=lambda: self.video_extract_frame_thread(path, frame_path, fraction))
                 thread.start()
                 
 
-    def video_extract_frame_thread(self, path, proxy_path, frame_path, current_video_position):
-        ffmpeg_tools.extract_frame(path, proxy_path, frame_path, current_video_position)        
+    def video_extract_frame_thread(self, path, frame_path, fraction):
+        # Map the position from whatever is playing (proxy or original) to the
+        # original file before extracting a full resolution frame.
+        position = fraction * ffmpeg_tools.duration(path)
+        ffmpeg_tools.extract_frame(path, frame_path, position)        
         self.app.thumbnail_view.insert_thumbnail(frame_path)   
 
-    def set_video_trim_start(self, start):
-        self.video_trim_start = start
-        Logger.info(f'Set video_trim_start to {self.video_trim_start}')
+    def set_video_trim_start(self, fraction):
+        self.video_trim_start_fraction = fraction
+        Logger.info(f'Set video_trim_start to {self.video_trim_start_fraction:.4f}')
 
     def video_set_trim_start(self):
-        if self.current_video and self.current_video.position is not None:
+        if self.current_video and self.current_video.position is not None and self.current_video.duration:
             self.show_toast('Set Trim Start Position')
-            self.set_video_trim_start(self.current_video.position)
+            self.set_video_trim_start(self.current_video.position / self.current_video.duration)
 
     def video_trim(self):
-        if self.current_video:
+        if self.current_video and self.current_video.duration:
             self.show_toast('Saving Trimmed Video')
-            Logger.info(f'Trim video from {self.video_trim_start} to {self.current_video.position}')
-            self.video_extract_section(self.video_trim_start, self.current_video.position)
+            end_fraction = self.current_video.position / self.current_video.duration
+            Logger.info(f'Trim video from {self.video_trim_start_fraction:.4f} to {end_fraction:.4f}')
+            self.video_extract_section(self.video_trim_start_fraction, end_fraction)
 
     def video_restart(self):
         if self.current_video:
             self.current_video.seek(0, precise = False)
 
-    def video_extract_section(self, start, end):
+    def video_extract_section(self, start_fraction, end_fraction):
         if self.current_video:
-            source = self.app.thumbnail_view.currentFile.path # pylint: disable=no-member
+            media_file = self.app.thumbnail_view.currentFile # pylint: disable=no-member
 
-            thread = threading.Thread(target=lambda: self.video_extract_section_thread(source, start, end))
+            thread = threading.Thread(target=lambda: self.video_extract_section_thread(media_file, start_fraction, end_fraction))
             thread.start()
 
-    def video_extract_section_thread(self, source, start, end):
-        Logger.info(f'Trim Video {source} from {start} to {end}.')
+    def video_extract_section_thread(self, media_file, start_fraction, end_fraction):
+        source = media_file.path
+        proxy = media_file.proxy_path
 
         parts = os.path.splitext(source)
-        extension = parts[1].lower()
+        extension = parts[1]
+        proxy_extension = os.path.splitext(proxy)[1] if proxy else None
 
         suffixNumber = 1
         while (True):
             target = parts[0] + ' ' + str(suffixNumber) + extension
-            if not os.path.exists(target):
+            target_proxy = (parts[0] + ' ' + str(suffixNumber) + proxy_extension) if proxy else None
+            if not os.path.exists(target) and (not target_proxy or not os.path.exists(target_proxy)):
                 break
             suffixNumber = suffixNumber + 1
 
-        ffmpeg_tools.trim(source, target, start, end)
+        Logger.info(f'Trim {source} from {start_fraction:.4f} to {end_fraction:.4f} -> {target}')
 
-        Logger.info(f'Trim Video {source} from {start} to {end} completed.')
+        source_duration = ffmpeg_tools.duration(source)
+        ffmpeg_tools.trim(source, target, start_fraction * source_duration, end_fraction * source_duration)
+
+        if proxy:
+            proxy_duration = ffmpeg_tools.duration(proxy)
+            Logger.info(f'Trim proxy {proxy} from {start_fraction:.4f} to {end_fraction:.4f} -> {target_proxy}')
+            ffmpeg_tools.trim(proxy, target_proxy, start_fraction * proxy_duration, end_fraction * proxy_duration)
+
+        Logger.info(f'Trim completed -> {target}')
 
         self.app.thumbnail_view.insert_thumbnail(target)
 
@@ -435,11 +454,24 @@ class image_view(Screen):
             self.ids.proxy_button.source = 'images\\proxy-off.png'
 
     def toggle_proxy(self):
+        current_file = self.app.thumbnail_view.currentFile
+        previous_path = self.video_source_path(current_file) if current_file else None
+
         self.app.data.useProxy = not self.app.data.useProxy
         self.app.data.save()
         self.update_proxy_button()
         self.show_toast('Use Proxy ' + ('On' if self.app.data.useProxy else 'Off'))
-        self.loadMedia()
+
+        source_path = self.video_source_path(current_file) if current_file else None
+
+        # Only reload if the toggle actually selects a different file, and
+        # resume from the same relative position so playback does not restart.
+        if self.current_video and source_path and source_path != previous_path:
+            if self.current_video.duration:
+                self.restart_position = self.current_video.position / self.current_video.duration
+                Logger.info(f'toggle_proxy: resuming from {self.restart_position:.4f}')
+            self.pending_video_state = 'play' if self.current_video.state == 'play' else 'pause'
+            self.loadMedia()
 
         return True
 

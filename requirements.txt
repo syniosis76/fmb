@@ -2,7 +2,6 @@ Pillow
 pillow-lut
 send2trash
 ffpyplayer
-ffmpeg-python
 mpv
 kivy_deps.sdl2
 kivy_deps.glew
